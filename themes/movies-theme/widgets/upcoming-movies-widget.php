@@ -32,62 +32,53 @@ class Upcoming_Movies_Widget extends WP_Widget {
 
         echo $args['before_title'] . apply_filters('widget_title', $title) . $args['after_title'];
 
-        // Query for upcoming movies
-        $upcoming_movies = new WP_Query(array(
-            'post_type' => 'movie',
-            'posts_per_page' => $number,
-            'meta_query' => array(
-                array(
-                    'key' => 'movie_release_date',
-                    'value' => date('Y-m-d'),
-                    'compare' => '>',
-                    'type' => 'DATE'
-                )
-            ),
-            'meta_key' => 'movie_release_date',
-            'orderby' => 'meta_value',
-            'order' => 'ASC'
-        ));
+        // Use the new API function to get upcoming movies
+        $upcoming_movies_grouped = movies_get_upcoming_movies($number);
 
-        if ($upcoming_movies->have_posts()): ?>
+        if (!empty($upcoming_movies_grouped)): ?>
             <div class="upcoming-movies-list">
-                <?php while ($upcoming_movies->have_posts()): $upcoming_movies->the_post(); ?>
-                    <div class="upcoming-movie-item">
-                        <?php if ($show_poster && has_post_thumbnail()): ?>
-                            <div class="movie-poster">
-                                <a href="<?php the_permalink(); ?>">
-                                    <?php the_post_thumbnail('thumbnail'); ?>
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div class="movie-info">
-                            <h4 class="movie-title">
-                                <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                            </h4>
-                            
-                            <?php if ($show_date): ?>
-                                <?php $release_date = get_post_meta(get_the_ID(), 'movie_release_date', true); ?>
-                                <?php if ($release_date): ?>
-                                    <div class="release-date">
-                                        <span class="date-label"><?php _e('Release Date:', 'movies-theme'); ?></span>
-                                        <span class="date-value"><?php echo date_i18n(get_option('date_format'), strtotime($release_date)); ?></span>
+                <?php foreach ($upcoming_movies_grouped as $month_year => $movies): ?>
+                    <div class="month-group">
+                        <h5 class="month-header"><?php echo esc_html($month_year); ?></h5>
+                        <?php foreach ($movies as $movie): ?>
+                            <div class="upcoming-movie-item">
+                                <?php if ($show_poster && has_post_thumbnail($movie->ID)): ?>
+                                    <div class="movie-poster">
+                                        <a href="<?php echo get_permalink($movie->ID); ?>">
+                                            <?php echo get_the_post_thumbnail($movie->ID, 'thumbnail'); ?>
+                                        </a>
                                     </div>
                                 <?php endif; ?>
-                            <?php endif; ?>
-                            
-                            <?php
-                            $genres = get_the_terms(get_the_ID(), 'genre');
-                            if ($genres && !is_wp_error($genres)): ?>
-                                <div class="movie-genres">
-                                    <?php foreach (array_slice($genres, 0, 2) as $genre): ?>
-                                        <span class="genre-tag"><?php echo esc_html($genre->name); ?></span>
-                                    <?php endforeach; ?>
+                                
+                                <div class="movie-info">
+                                    <h4 class="movie-title">
+                                        <a href="<?php echo get_permalink($movie->ID); ?>"><?php echo esc_html($movie->post_title); ?></a>
+                                    </h4>
+                                    
+                                    <?php if ($show_date): ?>
+                                        <?php $release_date = get_post_meta($movie->ID, 'release_date', true); ?>
+                                        <?php if ($release_date): ?>
+                                            <div class="release-date">
+                                                <span class="date-label"><?php _e('Release Date:', 'movies-theme'); ?></span>
+                                                <span class="date-value"><?php echo date_i18n(get_option('date_format'), strtotime($release_date)); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                    
+                                    <?php
+                                    $genres = get_the_terms($movie->ID, 'genre');
+                                    if ($genres && !is_wp_error($genres)): ?>
+                                        <div class="movie-genres">
+                                            <?php foreach (array_slice($genres, 0, 2) as $genre): ?>
+                                                <span class="genre-tag"><?php echo esc_html($genre->name); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php endwhile; wp_reset_postdata(); ?>
+                <?php endforeach; ?>
             </div>
             
             <div class="widget-footer">

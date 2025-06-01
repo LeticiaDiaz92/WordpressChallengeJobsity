@@ -26,105 +26,64 @@ class Popular_Actors_Widget extends WP_Widget {
         echo $args['before_widget'];
 
         $title = !empty($instance['title']) ? $instance['title'] : __('Popular Actors', 'movies-theme');
-        $number = !empty($instance['number']) ? absint($instance['number']) : 5;
+        $number = !empty($instance['number']) ? absint($instance['number']) : 10;
         $show_photo = isset($instance['show_photo']) ? $instance['show_photo'] : true;
-        $show_movie_count = isset($instance['show_movie_count']) ? $instance['show_movie_count'] : true;
-        $sort_by = !empty($instance['sort_by']) ? $instance['sort_by'] : 'random';
+        $show_bio = isset($instance['show_bio']) ? $instance['show_bio'] : true;
 
         echo $args['before_title'] . apply_filters('widget_title', $title) . $args['after_title'];
 
-        // Build query args based on sorting preference
-        $query_args = array(
-            'post_type' => 'actor',
-            'posts_per_page' => $number,
-            'post_status' => 'publish'
-        );
+        // Use the new API function to get popular actors
+        $popular_actors = movies_get_popular_actors($number);
 
-        switch ($sort_by) {
-            case 'recent':
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-                break;
-            case 'popular':
-                $query_args['meta_key'] = 'actor_popularity';
-                $query_args['orderby'] = 'meta_value_num';
-                $query_args['order'] = 'DESC';
-                break;
-            case 'alphabetical':
-                $query_args['orderby'] = 'title';
-                $query_args['order'] = 'ASC';
-                break;
-            case 'random':
-            default:
-                $query_args['orderby'] = 'rand';
-                break;
-        }
-
-        $popular_actors = new WP_Query($query_args);
-
-        if ($popular_actors->have_posts()): ?>
+        if (!empty($popular_actors)): ?>
             <div class="popular-actors-list">
-                <?php while ($popular_actors->have_posts()): $popular_actors->the_post(); ?>
+                <?php foreach ($popular_actors as $actor): ?>
                     <div class="popular-actor-item">
-                        <?php if ($show_photo && has_post_thumbnail()): ?>
+                        <?php if ($show_photo && has_post_thumbnail($actor->ID)): ?>
                             <div class="actor-photo">
-                                <a href="<?php the_permalink(); ?>">
-                                    <?php the_post_thumbnail('thumbnail'); ?>
+                                <a href="<?php echo get_permalink($actor->ID); ?>">
+                                    <?php echo get_the_post_thumbnail($actor->ID, 'thumbnail'); ?>
                                 </a>
                             </div>
                         <?php endif; ?>
                         
                         <div class="actor-info">
                             <h4 class="actor-name">
-                                <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                <a href="<?php echo get_permalink($actor->ID); ?>"><?php echo esc_html($actor->post_title); ?></a>
                             </h4>
                             
-                            <?php if ($show_movie_count): ?>
-                                <?php
-                                // Count movies this actor has appeared in
-                                $movie_count = new WP_Query(array(
-                                    'post_type' => 'movie',
-                                    'posts_per_page' => -1,
-                                    'meta_query' => array(
-                                        array(
-                                            'key' => 'movie_cast',
-                                            'value' => get_the_ID(),
-                                            'compare' => 'LIKE'
-                                        )
-                                    ),
-                                    'fields' => 'ids'
-                                ));
-                                $total_movies = $movie_count->found_posts;
-                                wp_reset_postdata();
-                                ?>
-                                
-                                <?php if ($total_movies > 0): ?>
-                                    <div class="movie-count">
-                                        <?php printf(
-                                            _n('%d movie', '%d movies', $total_movies, 'movies-theme'),
-                                            $total_movies
-                                        ); ?>
+                            <?php if ($show_bio): ?>
+                                <?php 
+                                $bio = wp_trim_words($actor->post_content, 15, '...');
+                                if (!empty($bio)): ?>
+                                    <div class="actor-bio">
+                                        <?php echo wp_kses_post($bio); ?>
                                     </div>
                                 <?php endif; ?>
                             <?php endif; ?>
                             
-                            <?php
-                            $nationality = get_post_meta(get_the_ID(), 'actor_nationality', true);
-                            if ($nationality): ?>
-                                <div class="actor-nationality">
-                                    <span class="nationality-label"><?php _e('From:', 'movies-theme'); ?></span>
-                                    <span class="nationality-value"><?php echo esc_html($nationality); ?></span>
+                            <?php 
+                            // Show popularity score
+                            $popularity = get_post_meta($actor->ID, 'popularity', true);
+                            if ($popularity): ?>
+                                <div class="actor-popularity">
+                                    <span class="popularity-label"><?php _e('Popularity:', 'movies-theme'); ?></span>
+                                    <span class="popularity-score"><?php echo number_format((float)$popularity, 1); ?></span>
                                 </div>
                             <?php endif; ?>
                             
-                            <?php if (has_excerpt()): ?>
-                                <div class="actor-excerpt">
-                                    <?php echo wp_trim_words(get_the_excerpt(), 15, '...'); ?>
+                            <?php 
+                            // Show birth place if available
+                            $birth_place = get_post_meta($actor->ID, 'place_of_birth', true);
+                            if ($birth_place): ?>
+                                <div class="actor-birthplace">
+                                    <span class="birthplace-label"><?php _e('From:', 'movies-theme'); ?></span>
+                                    <span class="birthplace-value"><?php echo esc_html($birth_place); ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
-                <?php endwhile; wp_reset_postdata(); ?>
+                <?php endforeach; ?>
             </div>
             
             <div class="widget-footer">
@@ -133,7 +92,7 @@ class Popular_Actors_Widget extends WP_Widget {
                 </a>
             </div>
         <?php else: ?>
-            <p class="no-popular-actors"><?php _e('No actors found.', 'movies-theme'); ?></p>
+            <p class="no-popular-actors"><?php _e('No popular actors found.', 'movies-theme'); ?></p>
         <?php endif;
 
         echo $args['after_widget'];
@@ -144,10 +103,9 @@ class Popular_Actors_Widget extends WP_Widget {
      */
     public function form($instance) {
         $title = !empty($instance['title']) ? $instance['title'] : __('Popular Actors', 'movies-theme');
-        $number = !empty($instance['number']) ? absint($instance['number']) : 5;
+        $number = !empty($instance['number']) ? absint($instance['number']) : 10;
         $show_photo = isset($instance['show_photo']) ? (bool) $instance['show_photo'] : true;
-        $show_movie_count = isset($instance['show_movie_count']) ? (bool) $instance['show_movie_count'] : true;
-        $sort_by = !empty($instance['sort_by']) ? $instance['sort_by'] : 'random';
+        $show_bio = isset($instance['show_bio']) ? (bool) $instance['show_bio'] : true;
         ?>
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('title')); ?>"><?php _e('Title:', 'movies-theme'); ?></label>
@@ -160,23 +118,13 @@ class Popular_Actors_Widget extends WP_Widget {
         </p>
         
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('sort_by')); ?>"><?php _e('Sort by:', 'movies-theme'); ?></label>
-            <select class="widefat" id="<?php echo esc_attr($this->get_field_id('sort_by')); ?>" name="<?php echo esc_attr($this->get_field_name('sort_by')); ?>">
-                <option value="random" <?php selected($sort_by, 'random'); ?>><?php _e('Random', 'movies-theme'); ?></option>
-                <option value="popular" <?php selected($sort_by, 'popular'); ?>><?php _e('Most Popular', 'movies-theme'); ?></option>
-                <option value="recent" <?php selected($sort_by, 'recent'); ?>><?php _e('Most Recent', 'movies-theme'); ?></option>
-                <option value="alphabetical" <?php selected($sort_by, 'alphabetical'); ?>><?php _e('Alphabetical', 'movies-theme'); ?></option>
-            </select>
-        </p>
-        
-        <p>
             <input class="checkbox" type="checkbox" <?php checked($show_photo); ?> id="<?php echo esc_attr($this->get_field_id('show_photo')); ?>" name="<?php echo esc_attr($this->get_field_name('show_photo')); ?>">
             <label for="<?php echo esc_attr($this->get_field_id('show_photo')); ?>"><?php _e('Show actor photo', 'movies-theme'); ?></label>
         </p>
         
         <p>
-            <input class="checkbox" type="checkbox" <?php checked($show_movie_count); ?> id="<?php echo esc_attr($this->get_field_id('show_movie_count')); ?>" name="<?php echo esc_attr($this->get_field_name('show_movie_count')); ?>">
-            <label for="<?php echo esc_attr($this->get_field_id('show_movie_count')); ?>"><?php _e('Show movie count', 'movies-theme'); ?></label>
+            <input class="checkbox" type="checkbox" <?php checked($show_bio); ?> id="<?php echo esc_attr($this->get_field_id('show_bio')); ?>" name="<?php echo esc_attr($this->get_field_name('show_bio')); ?>">
+            <label for="<?php echo esc_attr($this->get_field_id('show_bio')); ?>"><?php _e('Show short bio', 'movies-theme'); ?></label>
         </p>
         <?php
     }
@@ -187,10 +135,9 @@ class Popular_Actors_Widget extends WP_Widget {
     public function update($new_instance, $old_instance) {
         $instance = array();
         $instance['title'] = (!empty($new_instance['title'])) ? sanitize_text_field($new_instance['title']) : '';
-        $instance['number'] = (!empty($new_instance['number'])) ? absint($new_instance['number']) : 5;
-        $instance['sort_by'] = (!empty($new_instance['sort_by'])) ? sanitize_text_field($new_instance['sort_by']) : 'random';
+        $instance['number'] = (!empty($new_instance['number'])) ? absint($new_instance['number']) : 10;
         $instance['show_photo'] = isset($new_instance['show_photo']) ? (bool) $new_instance['show_photo'] : false;
-        $instance['show_movie_count'] = isset($new_instance['show_movie_count']) ? (bool) $new_instance['show_movie_count'] : false;
+        $instance['show_bio'] = isset($new_instance['show_bio']) ? (bool) $new_instance['show_bio'] : false;
 
         return $instance;
     }
