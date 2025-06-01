@@ -1,0 +1,110 @@
+// Layout styles - Movies Theme
+// =============================================================================
+@use 'sass:math';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Container
+// -----------------------------------------------------------------------------
+.container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $container-padding;
+}
+
+// Site structure
+// -----------------------------------------------------------------------------
+.site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-content {
+  flex: 1;
+  padding: $spacing-xl 0;
+}
+
+// Content areas
+// -----------------------------------------------------------------------------
+.content-area {
+  width: 100%;
+  
+  @include respond-to('lg') {
+    width: 70%;
+    padding-right: $spacing-xl;
+  }
+}
+
+.widget-area {
+  width: 100%;
+  margin-top: $spacing-xl;
+  
+  @include respond-to('lg') {
+    width: 30%;
+    margin-top: 0;
+  }
+}
+
+// Main layout wrapper
+// -----------------------------------------------------------------------------
+.main-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-xl;
+  flex-direction: column;
+  
+  @include respond-to('lg') {
+    flex-direction: row;
+  }
+}
+
+// Grid system
+// -----------------------------------------------------------------------------
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 calc(#{$grid-gutter} / -2);
+}
+
+.col {
+  padding: 0 calc(#{$grid-gutter} / 2);
+  margin-bottom: $grid-gutter;
+}
+
+// Column sizes
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    flex: 0 0 math.percentage(math.div($i, $grid-columns));
+    max-width: math.percentage(math.div($i, $grid-columns));
+  }
+}
+
+// Responsive columns
+@include respond-to('sm') {
+  @for $i from 1 through $grid-columns {
+    .col-sm-#{$i} {
+      flex: 0 0 math.percentage(math.div($i, $grid-columns));
+      max-width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}
+
+@include respond-to('md') {
+  @for $i from 1 through $grid-columns {
+    .col-md-#{$i} {
+      flex: 0 0 math.percentage(math.div($i, $grid-columns));
+      max-width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+}
+
+@include respond-to('lg') {
+  @for $i from 1 through $grid-columns {
+    .col-lg-#{$i} {
+      flex: 0 0 math.percentage(math.div($i, $grid-columns));
+      max-width: math.percentage(math.div($i, $grid-columns));
+    }
+  }
+} 

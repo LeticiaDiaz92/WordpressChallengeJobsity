@@ -1,0 +1,99 @@
+// Actor card component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.actor-card {
+  @include card-style;
+  text-align: center;
+  
+  .actor-photo {
+    @include aspect-ratio(1, 1); // Square ratio for actor photos
+    margin-bottom: $spacing-md;
+    border-radius: 50%;
+    overflow: hidden;
+    
+    img {
+      transition: transform $transition-speed-normal ease;
+    }
+  }
+  
+  .actor-info {
+    .actor-name {
+      font-size: $font-size-large;
+      font-weight: $font-weight-bold;
+      margin-bottom: $spacing-sm;
+      
+      a {
+        color: $text-color;
+        text-decoration: none;
+        
+        &:hover {
+          color: $primary-color;
+        }
+      }
+    }
+    
+    .actor-birth-year {
+      color: lighten($text-color, 20%);
+      font-size: $font-size-small;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .actor-movies-count {
+      color: $accent-color;
+      font-size: $font-size-small;
+      font-weight: $font-weight-medium;
+      margin-bottom: $spacing-md;
+      
+      &::before {
+        content: "🎬 ";
+      }
+    }
+    
+    .actor-bio {
+      @include text-clamp(3);
+      font-size: $font-size-small;
+      color: lighten($text-color, 10%);
+      margin-bottom: $spacing-md;
+    }
+  }
+  
+  .actor-actions {
+    .view-movies-btn {
+      @include button-style($primary-color, $text-color);
+      width: 100%;
+      font-size: $font-size-small;
+    }
+  }
+  
+  // Hover effects
+  &:hover {
+    .actor-photo img {
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Actor grid
+// -----------------------------------------------------------------------------
+.actors-grid {
+  @include grid(1, $spacing-lg);
+  
+  @include respond-to('sm') {
+    @include grid(2, $spacing-lg);
+  }
+  
+  @include respond-to('md') {
+    @include grid(3, $spacing-lg);
+  }
+  
+  @include respond-to('lg') {
+    @include grid(4, $spacing-lg);
+  }
+  
+  @include respond-to('xl') {
+    @include grid(5, $spacing-lg);
+  }
+} 

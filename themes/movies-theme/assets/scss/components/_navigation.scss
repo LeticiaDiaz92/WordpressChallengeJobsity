@@ -1,0 +1,150 @@
+// Navigation component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.main-navigation {
+  position: relative;
+  
+  .menu-toggle {
+    @include button-reset;
+    display: block;
+    padding: $spacing-sm;
+    background-color: $primary-color;
+    color: $text-color;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-small;
+    
+    @include respond-to('md') {
+      display: none;
+    }
+    
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+    }
+  }
+  
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: $secondary-color;
+    box-shadow: $box-shadow-md;
+    z-index: $z-index-dropdown;
+    
+    @include respond-to('md') {
+      display: flex;
+      position: static;
+      background-color: transparent;
+      box-shadow: none;
+      gap: $spacing-lg;
+    }
+    
+    &.toggled {
+      display: block;
+    }
+    
+    li {
+      position: relative;
+      
+      a {
+        display: block;
+        padding: $spacing-md;
+        color: $text-color;
+        text-decoration: none;
+        transition: all $transition-speed-normal ease;
+        border-bottom: 1px solid $border-color;
+        
+        @include respond-to('md') {
+          padding: $spacing-sm 0;
+          border-bottom: none;
+          border-bottom: 2px solid transparent;
+        }
+        
+        &:hover,
+        &:focus {
+          color: $primary-color;
+          background-color: $background-light;
+          
+          @include respond-to('md') {
+            background-color: transparent;
+            border-bottom-color: $primary-color;
+          }
+        }
+      }
+      
+      &.current-menu-item > a,
+      &.current_page_item > a {
+        color: $primary-color;
+        
+        @include respond-to('md') {
+          border-bottom-color: $primary-color;
+        }
+      }
+    }
+  }
+  
+  // Submenu
+  .sub-menu {
+    display: none;
+    position: static;
+    background-color: $background-light;
+    
+    @include respond-to('md') {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 200px;
+      box-shadow: $box-shadow-md;
+    }
+    
+    li a {
+      padding-left: $spacing-xl;
+      
+      @include respond-to('md') {
+        padding-left: $spacing-md;
+      }
+    }
+  }
+  
+  .menu-item-has-children {
+    &:hover .sub-menu {
+      @include respond-to('md') {
+        display: block;
+      }
+    }
+    
+    > a::after {
+      content: ' ▼';
+      font-size: 0.8em;
+      margin-left: $spacing-xs;
+    }
+  }
+}
+
+// Footer navigation
+// -----------------------------------------------------------------------------
+.footer-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  justify-content: center;
+  
+  @include respond-to('md') {
+    justify-content: flex-start;
+  }
+  
+  li a {
+    color: color.mix($text-color, transparent, 80%);
+    text-decoration: none;
+    font-size: $font-size-small;
+    transition: color $transition-speed-normal ease;
+    
+    &:hover {
+      color: $primary-color;
+    }
+  }
+} 

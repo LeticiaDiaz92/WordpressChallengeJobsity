@@ -1,0 +1,85 @@
+// Filters component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.filters-container {
+  background-color: $background-light;
+  padding: $spacing-lg;
+  border-radius: $border-radius-lg;
+  margin-bottom: $spacing-xl;
+  box-shadow: $box-shadow-sm;
+}
+
+.filters-form {
+  @include grid(1, $spacing-md);
+  
+  @include respond-to('md') {
+    @include grid(4, $spacing-md);
+    align-items: end;
+  }
+  
+  .filter-group {
+    label {
+      display: block;
+      margin-bottom: $spacing-xs;
+      font-size: $font-size-small;
+      font-weight: $font-weight-medium;
+      color: $text-color;
+    }
+    
+    select,
+    input {
+      width: 100%;
+      padding: $spacing-sm;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-md;
+      background-color: $background-color;
+      color: $text-color;
+      font-size: $font-size-small;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+      }
+    }
+  }
+  
+  .filter-submit {
+    @include button-style($primary-color, $text-color);
+    width: 100%;
+    
+    @include respond-to('md') {
+      width: auto;
+    }
+  }
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+  
+  .filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs $spacing-sm;
+    background-color: $primary-color;
+    color: $text-color;
+    font-size: $font-size-small;
+    border-radius: $border-radius-sm;
+    
+    .remove-filter {
+      @include button-reset;
+      color: $text-color;
+      font-weight: bold;
+      
+      &:hover {
+        color: $accent-color;
+      }
+    }
+  }
+} 

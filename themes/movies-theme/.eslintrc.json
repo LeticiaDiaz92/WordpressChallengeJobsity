@@ -1,0 +1,16 @@
+{
+  "extends": "standard",
+  "env": {
+    "browser": true,
+    "jquery": true
+  },
+  "globals": {
+    "wp": "readonly",
+    "movies_ajax": "readonly",
+    "MoviesTheme": "writable"
+  },
+  "rules": {
+    "no-unused-vars": ["error", { "args": "none" }],
+    "space-before-function-paren": ["error", "never"]
+  }
+} 

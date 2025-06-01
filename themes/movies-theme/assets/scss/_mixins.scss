@@ -1,0 +1,162 @@
+// Mixins - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use 'sass:math';
+@use 'variables' as *;
+
+// Responsive breakpoints
+// -----------------------------------------------------------------------------
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (min-width: $breakpoint-sm) { @content; }
+  }
+  @else if $breakpoint == 'md' {
+    @media (min-width: $breakpoint-md) { @content; }
+  }
+  @else if $breakpoint == 'lg' {
+    @media (min-width: $breakpoint-lg) { @content; }
+  }
+  @else if $breakpoint == 'xl' {
+    @media (min-width: $breakpoint-xl) { @content; }
+  }
+  @else if $breakpoint == 'xxl' {
+    @media (min-width: $breakpoint-xxl) { @content; }
+  }
+}
+
+// Flexbox utilities
+// -----------------------------------------------------------------------------
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Grid utilities
+// -----------------------------------------------------------------------------
+@mixin grid($columns: $grid-columns, $gap: $grid-gutter) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+// Text utilities
+// -----------------------------------------------------------------------------
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Button utilities
+// -----------------------------------------------------------------------------
+@mixin button-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
+@mixin button-style($bg-color: $primary-color, $text-color: $text-color, $hover-bg: null) {
+  @if $hover-bg == null {
+    $hover-bg: color.adjust($primary-color, $lightness: -10%);
+  }
+  
+  display: inline-block;
+  padding: $spacing-sm $spacing-md;
+  background-color: $bg-color;
+  color: $text-color;
+  text-decoration: none;
+  border-radius: $border-radius-md;
+  transition: all $transition-speed-normal ease;
+  border: none;
+  cursor: pointer;
+  
+  &:hover,
+  &:focus {
+    background-color: $hover-bg;
+    text-decoration: none;
+    color: $text-color;
+  }
+}
+
+// Card utilities
+// -----------------------------------------------------------------------------
+@mixin card-style {
+  background-color: $background-light;
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow-md;
+  padding: $spacing-lg;
+  transition: transform $transition-speed-normal ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-lg;
+  }
+}
+
+// Image utilities
+// -----------------------------------------------------------------------------
+@mixin aspect-ratio($width: 16, $height: 9) {
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    display: block;
+    padding-top: math.percentage(math.div($height, $width));
+  }
+  
+  > img,
+  > video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Container utilities
+// -----------------------------------------------------------------------------
+@mixin container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $container-padding;
+}
+
+// Visibility utilities
+// -----------------------------------------------------------------------------
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+} 

@@ -1,0 +1,102 @@
+// Footer component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.site-footer {
+  background-color: $secondary-color;
+  padding: $spacing-xl 0 $spacing-md;
+  margin-top: auto;
+  border-top: 1px solid $border-color;
+}
+
+// Footer widgets
+// -----------------------------------------------------------------------------
+.footer-widgets {
+  display: grid;
+  gap: $spacing-xl;
+  margin-bottom: $spacing-xl;
+  
+  @include respond-to('md') {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .footer-widget-area {
+    .widget {
+      margin-bottom: $spacing-lg;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .widget-title {
+        font-size: $font-size-large;
+        margin-bottom: $spacing-md;
+        color: $text-color;
+        border-bottom: 2px solid $primary-color;
+        padding-bottom: $spacing-sm;
+      }
+      
+      .widget-content {
+        color: color.mix($text-color, transparent, 80%);
+        
+        p {
+          font-size: $font-size-small;
+          line-height: $line-height-base;
+        }
+        
+        ul {
+          li {
+            margin-bottom: $spacing-sm;
+            
+            a {
+              color: color.mix($text-color, transparent, 80%);
+              text-decoration: none;
+              font-size: $font-size-small;
+              transition: color $transition-speed-normal ease;
+              
+              &:hover {
+                color: $primary-color;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Site info
+// -----------------------------------------------------------------------------
+.site-info {
+  padding-top: $spacing-lg;
+  border-top: 1px solid $border-color;
+  
+  @include respond-to('md') {
+    @include flex-between;
+    align-items: center;
+  }
+  
+  .footer-navigation {
+    margin-bottom: $spacing-md;
+    
+    @include respond-to('md') {
+      margin-bottom: 0;
+    }
+  }
+  
+  .copyright {
+    text-align: center;
+    
+    @include respond-to('md') {
+      text-align: right;
+    }
+    
+    p {
+      margin: 0;
+      font-size: $font-size-small;
+      color: color.mix($text-color, transparent, 70%);
+    }
+  }
+} 

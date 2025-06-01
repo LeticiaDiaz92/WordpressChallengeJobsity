@@ -1,0 +1,113 @@
+// Header component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.site-header {
+  background-color: $secondary-color;
+  padding: $spacing-md 0;
+  box-shadow: $box-shadow-md;
+  position: sticky;
+  top: 0;
+  z-index: $z-index-sticky;
+  
+  .container {
+    @include flex-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+  }
+}
+
+// Site branding
+// -----------------------------------------------------------------------------
+.site-branding {
+  display: flex;
+  align-items: center;
+  
+  .custom-logo-link {
+    display: block;
+    
+    img {
+      max-height: 40px;
+      width: auto;
+    }
+  }
+  
+  .site-title {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    
+    a {
+      color: $text-color;
+      text-decoration: none;
+      
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+  
+  .site-description {
+    margin: 0;
+    font-size: $font-size-small;
+    color: color.mix($text-color, transparent, 80%);
+  }
+}
+
+// Header search
+// -----------------------------------------------------------------------------
+.header-search {
+  order: 3;
+  width: 100%;
+  
+  @include respond-to('md') {
+    order: initial;
+    width: auto;
+    max-width: 300px;
+  }
+  
+  .search-form {
+    position: relative;
+    
+    .search-field {
+      width: 100%;
+      padding: $spacing-sm $spacing-md;
+      padding-right: 50px;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-md;
+      background-color: $background-light;
+      color: $text-color;
+      font-size: $font-size-small;
+      
+      &::placeholder {
+        color: color.mix($text-color, transparent, 70%);
+      }
+      
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+      }
+    }
+    
+    .search-submit {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 50px;
+      background-color: $primary-color;
+      border: none;
+      border-radius: 0 $border-radius-md $border-radius-md 0;
+      color: $text-color;
+      cursor: pointer;
+      transition: background-color $transition-speed-normal ease;
+      
+      &:hover {
+        background-color: color.adjust($primary-color, $lightness: -10%);
+      }
+    }
+  }
+} 

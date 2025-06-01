@@ -1,0 +1,107 @@
+// Base styles - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use 'variables' as *;
+
+// Reset and normalize
+// -----------------------------------------------------------------------------
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-family-primary;
+  font-weight: $font-weight-normal;
+  color: $text-color;
+  background-color: $background-color;
+  line-height: $line-height-base;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Links
+// -----------------------------------------------------------------------------
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-speed-normal ease;
+  
+  &:hover,
+  &:focus {
+    color: color.mix($primary-color, white, 90%);
+  }
+}
+
+// Images
+// -----------------------------------------------------------------------------
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+// Lists
+// -----------------------------------------------------------------------------
+ul, ol {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+}
+
+// Tables
+// -----------------------------------------------------------------------------
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+// Forms
+// -----------------------------------------------------------------------------
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+// Accessibility
+// -----------------------------------------------------------------------------
+.screen-reader-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: $z-index-tooltip;
+  padding: $spacing-sm;
+  background-color: $background-light;
+  color: $text-color;
+  text-decoration: none;
+  
+  &:focus {
+    left: 0;
+  }
+} 

@@ -1,0 +1,88 @@
+// Variables - Movies Theme
+// =============================================================================
+
+// Colors
+// -----------------------------------------------------------------------------
+$primary-color: #e50914;      // Netflix red
+$secondary-color: #221f1f;    // Dark gray
+$accent-color: #f5c518;       // IMDb yellow
+$text-color: #ffffff;         // White text
+$text-color-dark: #333333;    // Dark text
+$background-color: #141414;   // Dark background
+$background-light: #2f2f2f;   // Lighter dark background
+$border-color: #444444;       // Border color
+$success-color: #46d369;      // Success green
+$warning-color: #ffc107;      // Warning yellow
+$error-color: #dc3545;        // Error red
+
+// Typography
+// -----------------------------------------------------------------------------
+$font-family-primary: 'Helvetica Neue', Arial, sans-serif;
+$font-family-secondary: 'Georgia', serif;
+$font-family-mono: 'Consolas', 'Monaco', monospace;
+
+$font-size-base: 16px;
+$font-size-small: 14px;
+$font-size-large: 18px;
+$font-size-xl: 24px;
+$font-size-xxl: 32px;
+
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
+
+$line-height-base: 1.6;
+$line-height-tight: 1.2;
+$line-height-loose: 1.8;
+
+// Spacing
+// -----------------------------------------------------------------------------
+$spacing-xs: 0.25rem;   // 4px
+$spacing-sm: 0.5rem;    // 8px
+$spacing-md: 1rem;      // 16px
+$spacing-lg: 1.5rem;    // 24px
+$spacing-xl: 2rem;      // 32px
+$spacing-xxl: 3rem;     // 48px
+$spacing-xxxl: 4rem;    // 64px
+
+// Grid & Layout
+// -----------------------------------------------------------------------------
+$container-max-width: 1200px;
+$container-padding: $spacing-md;
+
+$grid-columns: 12;
+$grid-gutter: $spacing-md;
+
+// Breakpoints
+// -----------------------------------------------------------------------------
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+// Components
+// -----------------------------------------------------------------------------
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+
+$box-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+$box-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+$box-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+
+$transition-speed-fast: 0.15s;
+$transition-speed-normal: 0.3s;
+$transition-speed-slow: 0.5s;
+
+// Z-index
+// -----------------------------------------------------------------------------
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070; 

@@ -1,0 +1,45 @@
+{
+  "name": "movies-theme",
+  "version": "1.0.0",
+  "description": "A WordPress theme for movie and actor management with Sass compilation",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "sass assets/scss/main.scss assets/css/main.css --style=compressed --source-map",
+    "build:js": "npm run minify:js",
+    "dev": "npm run watch",
+    "watch": "npm run watch:css & npm run watch:js",
+    "watch:css": "sass assets/scss/main.scss assets/css/main.css --watch --source-map",
+    "watch:js": "chokidar 'assets/js/**/*.js' -c 'npm run minify:js' --initial",
+    "minify:js": "terser assets/js/main.js assets/js/ajax-filters.js assets/js/wishlist.js assets/js/search.js --compress --mangle --source-map --output assets/js/main.min.js",
+    "lint:scss": "stylelint 'assets/scss/**/*.scss' --fix",
+    "lint:js": "eslint assets/js/*.js --fix",
+    "clean": "rm -rf assets/css/main.css assets/css/main.css.map assets/js/main.min.js assets/js/main.min.js.map"
+  },
+  "keywords": [
+    "wordpress",
+    "theme",
+    "movies",
+    "sass",
+    "responsive"
+  ],
+  "author": "Your Name",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "sass": "^1.69.5",
+    "terser": "^5.24.0",
+    "chokidar-cli": "^3.0.0",
+    "stylelint": "^15.11.0",
+    "stylelint-config-standard-scss": "^11.1.0",
+    "eslint": "^8.54.0",
+    "eslint-config-standard": "^17.1.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "postcss-cli": "^10.1.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+} 

@@ -1,0 +1,41 @@
+// Pagination component - Movies Theme
+// =============================================================================
+@use 'sass:color';
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.pagination {
+  @include flex-center;
+  gap: $spacing-sm;
+  margin: $spacing-xl 0;
+  
+  .page-numbers {
+    @include button-style($background-light, $text-color, $primary-color);
+    min-width: 40px;
+    height: 40px;
+    @include flex-center;
+    text-decoration: none;
+    font-size: $font-size-small;
+    font-weight: $font-weight-medium;
+    
+    &.current {
+      background-color: $primary-color;
+      color: $text-color;
+    }
+    
+    &.dots {
+      background-color: transparent;
+      cursor: default;
+      
+      &:hover {
+        background-color: transparent;
+      }
+    }
+    
+    &.prev,
+    &.next {
+      padding: 0 $spacing-md;
+      min-width: auto;
+    }
+  }
+} 

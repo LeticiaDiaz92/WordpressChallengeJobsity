@@ -1,0 +1,10 @@
+/*
+Theme Name: Movies Theme
+Description: A custom WordPress theme for movie and actor management
+Author: Your Name
+Version: 1.0
+Text Domain: movies-theme
+*/
+
+/* This file will be overwritten by the compiled main.css from Sass */
+@import url('assets/css/main.css'); 

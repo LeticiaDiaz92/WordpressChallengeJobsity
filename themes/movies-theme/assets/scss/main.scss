@@ -1,0 +1,26 @@
+// Main SCSS file - Movies Theme
+// Import all partial files using @use (modern Sass syntax)
+
+// 1. Variables and mixins first
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// 2. Base styles
+@use 'base';
+
+// 3. Layout
+@use 'layout';
+
+// 4. Typography
+@use 'typography';
+
+// 5. Components
+@use 'components/header';
+@use 'components/footer';
+@use 'components/navigation';
+@use 'components/movie-card';
+@use 'components/actor-card';
+@use 'components/filters';
+@use 'components/pagination';
+@use 'components/buttons';
+@use 'components/forms'; 
