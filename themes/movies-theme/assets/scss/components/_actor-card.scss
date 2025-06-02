@@ -6,39 +6,60 @@
 
 .actor-card {
   @include card-style;
-  text-align: center;
+  text-align: left;
   
   .actor-photo {
     @include aspect-ratio(1, 1); // Square ratio for actor photos
     margin-bottom: $spacing-md;
-    border-radius: 50%;
     overflow: hidden;
     
     img {
-      transition: transform $transition-speed-normal ease;
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      transition: transform 0.3s;
+      transition: transform $transition-speed-normal ease; d
+
+      &:hover img {
+        transform: scale(1.05);
+      }
     }
   }
   
   .actor-info {
+    padding: $spacing-md;
     .actor-name {
       font-size: $font-size-large;
       font-weight: $font-weight-bold;
       margin-bottom: $spacing-sm;
+      text-align: center;
       
       a {
-        color: $text-color;
+        color: $primary-color;
         text-decoration: none;
         
         &:hover {
-          color: $primary-color;
+          color: $text-color;
         }
       }
     }
+
+    .actor-excerpt {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #777;
+      margin-top: 1rem;
+    }
     
-    .actor-birth-year {
+    .actor-birth-year, .actor-birthday, .actor-birthplace,
+    .actor-popularity, .popularity-score {
       color: lighten($text-color, 20%);
       font-size: $font-size-small;
       margin-bottom: $spacing-sm;
+
+      strong {
+        font-weight: 600;
+      }
     }
     
     .actor-movies-count {
@@ -58,6 +79,8 @@
       color: lighten($text-color, 10%);
       margin-bottom: $spacing-md;
     }
+
+   
   }
   
   .actor-actions {
@@ -74,26 +97,19 @@
       transform: scale(1.1);
     }
   }
+
+  .actor-photo.no-photo {
+    height: 350px;
+    background: #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .no-photo-placeholder {
+      color: #666;
+      font-size: 1rem;
+    }
+  }
+
 }
 
-// Actor grid
-// -----------------------------------------------------------------------------
-.actors-grid {
-  @include grid(1, $spacing-lg);
-  
-  @include respond-to('sm') {
-    @include grid(2, $spacing-lg);
-  }
-  
-  @include respond-to('md') {
-    @include grid(3, $spacing-lg);
-  }
-  
-  @include respond-to('lg') {
-    @include grid(4, $spacing-lg);
-  }
-  
-  @include respond-to('xl') {
-    @include grid(5, $spacing-lg);
-  }
-} 

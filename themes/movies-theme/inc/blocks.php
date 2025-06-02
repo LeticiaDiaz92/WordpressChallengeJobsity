@@ -85,8 +85,7 @@ add_action('init', 'movies_theme_register_blocks');
 function movies_theme_enqueue_block_assets() {
     $blocks_js_path = get_template_directory() . '/assets/js/blocks.js';
     $blocks_css_path = get_template_directory() . '/assets/css/blocks.css';
-    $slider_js_path = get_template_directory() . '/assets/js/upcoming-movies-slider.js';
-    $slider_css_path = get_template_directory() . '/assets/css/upcoming-movies-slider.css';
+    $upcoming_css_path = get_template_directory() . '/assets/css/upcoming-movies-slider.css';
     
     // Enqueue block editor script
     if (file_exists($blocks_js_path)) {
@@ -95,17 +94,6 @@ function movies_theme_enqueue_block_assets() {
             get_template_directory_uri() . '/assets/js/blocks.js',
             array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components', 'wp-i18n'),
             filemtime($blocks_js_path)
-        );
-    }
-
-    // Enqueue slider JavaScript
-    if (file_exists($slider_js_path)) {
-        wp_enqueue_script(
-            'movies-theme-slider',
-            get_template_directory_uri() . '/assets/js/upcoming-movies-slider.js',
-            array(),
-            filemtime($slider_js_path),
-            true
         );
     }
 
@@ -119,13 +107,13 @@ function movies_theme_enqueue_block_assets() {
         );
     }
 
-    // Enqueue slider styles
-    if (file_exists($slider_css_path)) {
+    // Enqueue upcoming movies grid styles
+    if (file_exists($upcoming_css_path)) {
         wp_enqueue_style(
-            'movies-theme-slider',
+            'movies-theme-upcoming-grid',
             get_template_directory_uri() . '/assets/css/upcoming-movies-slider.css',
             array(),
-            filemtime($slider_css_path)
+            filemtime($upcoming_css_path)
         );
     }
 }

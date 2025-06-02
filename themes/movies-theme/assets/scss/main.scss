@@ -15,6 +15,7 @@
 @use 'typography';
 
 // 5. Components
+@use 'components/header';
 @use 'components/footer';
 @use 'components/navigation';
 @use 'components/movie-card';
@@ -25,11 +26,9 @@
 @use 'components/forms';
 @use 'components/search-form';
 @use 'components/upcoming-movies-slider';
-@use 'components/archive-movie';
-@use 'components/archive-actor';
 @use 'components/single-movie'; 
 @use 'components/single-actor';
-@use 'components/header';
+@use 'components/banners';
 
 // Pages
 @use 'pages/search-results';

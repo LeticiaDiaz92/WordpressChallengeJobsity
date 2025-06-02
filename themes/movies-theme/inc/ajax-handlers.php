@@ -98,9 +98,9 @@ function movies_ajax_filter_movies() {
     if ($query->have_posts()) {
         ob_start();
         ?>
-        <div class="movies-grid">
+        <div class="archive-grid" id= "movies-grid">
             <?php while ($query->have_posts()) : $query->the_post(); ?>
-                <article class="movie-card-archive">
+                <article class="movie-card">
                     <?php if (has_post_thumbnail()) : ?>
                         <div class="movie-poster">
                             <a href="<?php the_permalink(); ?>">
@@ -170,16 +170,18 @@ function movies_ajax_filter_movies() {
         // Generate pagination
         ob_start();
         $pagination = paginate_links(array(
+            'base' => add_query_arg('paged', '%#%'),
             'total' => $query->max_num_pages,
             'current' => $paged,
-            'format' => '?paged=%#%',
+            'format' => '',
             'prev_text' => __('« Previous', 'movies-theme'),
             'next_text' => __('Next »', 'movies-theme'),
-            'type' => 'array'
+            'type' => 'array',
+            'add_args' => false
         ));
         
         if ($pagination) {
-            echo '<div class="pagination-wrapper"><div class="page-numbers-wrapper">';
+            echo '<div class="pagination-wrapper pagination"><div class=" nav-links page-numbers-wrapper">';
             foreach ($pagination as $page) {
                 echo $page;
             }
@@ -209,6 +211,9 @@ function movies_ajax_filter_movies() {
     }
     
     wp_reset_postdata();
+    
+    // Debug: Log response before sending
+    error_log('AJAX actors filter: Sending response: ' . print_r($response, true));
     
     wp_send_json($response);
 }
@@ -308,10 +313,16 @@ add_action('wp_ajax_nopriv_live_search', 'movies_handle_live_search');
  * AJAX handler for actor filters
  */
 function actors_ajax_filter_actors() {
+    // Debug: Log received data
+    error_log('AJAX actors filter called with data: ' . print_r($_POST, true));
+    
     // Verify nonce
     if (!wp_verify_nonce($_POST['nonce'], 'actors_nonce')) {
+        error_log('AJAX actors filter: Nonce verification failed');
         wp_die('Security check failed');
     }
+    
+    error_log('AJAX actors filter: Nonce verified successfully');
     
     // Get filter parameters
     $search = sanitize_text_field($_POST['actor_search'] ?? '');
@@ -391,9 +402,9 @@ function actors_ajax_filter_actors() {
     if ($query->have_posts()) {
         ob_start();
         ?>
-        <div class="actors-grid">
+        <div class="archive-grid" id= "actors-grid">
             <?php while ($query->have_posts()) : $query->the_post(); ?>
-                <article class="actor-card-archive">
+                <article class="actor-card">
                     <?php if (has_post_thumbnail()) : ?>
                         <div class="actor-photo">
                             <a href="<?php the_permalink(); ?>">
@@ -457,16 +468,18 @@ function actors_ajax_filter_actors() {
         // Generate pagination
         ob_start();
         $pagination = paginate_links(array(
+            'base' => add_query_arg('paged', '%#%'),
             'total' => $query->max_num_pages,
             'current' => $paged,
-            'format' => '?paged=%#%',
+            'format' => '',
             'prev_text' => __('« Previous', 'movies-theme'),
             'next_text' => __('Next »', 'movies-theme'),
-            'type' => 'array'
+            'type' => 'array',
+            'add_args' => false
         ));
         
         if ($pagination) {
-            echo '<div class="pagination-wrapper"><div class="page-numbers-wrapper">';
+            echo '<div class="pagination-wrapper pagination"><div class="nav-links page-numbers-wrapper">';
             foreach ($pagination as $page) {
                 echo $page;
             }
@@ -483,7 +496,7 @@ function actors_ajax_filter_actors() {
     } else {
         ob_start();
         ?>
-        <div class="no-actors-found">
+        <div class="no-results-found">
             <h2><?php _e('No actors found', 'movies-theme'); ?></h2>
             <p><?php _e('Try adjusting your filters or search terms.', 'movies-theme'); ?></p>
         </div>
@@ -496,6 +509,10 @@ function actors_ajax_filter_actors() {
     }
     
     wp_reset_postdata();
+    
+    // Debug: Log response before sending
+    error_log('AJAX actors filter: Sending response: ' . print_r($response, true));
+    
     wp_send_json($response);
 }
 

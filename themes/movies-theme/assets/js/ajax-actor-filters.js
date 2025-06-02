@@ -14,7 +14,7 @@ jQuery(document).ready(function($) {
 
   const ActorFilters = {
     $form: $('.filters-form'),
-    $resultsContainer: $('.actors-archive-container'),
+    $resultsContainer: $('#actors-archive-container'),
     $loadingOverlay: null,
     currentXHR: null,
     searchTimeout: null,
@@ -28,7 +28,7 @@ jQuery(document).ready(function($) {
 
     createLoadingOverlay: function() {
       this.$loadingOverlay = $(`
-        <div class="actors-loading-overlay">
+        <div class="loading-overlay">
           <div class="loading-spinner">
             <div class="spinner"></div>
             <p>Loading actors...</p>
@@ -57,17 +57,44 @@ jQuery(document).ready(function($) {
       })
 
       // Handle pagination clicks (delegated event)
-      $(document).on('click', '.pagination-wrapper a.page-numbers', function(e) {
+      $(document).on('click', '.pagination-wrapper a', function(e) {
         e.preventDefault()
-        const url = new URL(this.href)
-        const page = url.searchParams.get('paged') || 1
-        self.currentPage = parseInt(page)
+
+        // Extract page number from href or data attributes
+        let pageNum = 1
+        const href = $(this).attr('href')
+
+        if (href) {
+          const url = new URL(href, window.location.origin)
+          const extractedPage = url.searchParams.get('paged')
+          pageNum = parseInt(extractedPage) || 1
+        }
+
+        // Check if this is prev/next or numbered link
+        if ($(this).hasClass('prev')) {
+          pageNum = Math.max(1, self.currentPage - 1)
+        } else if ($(this).hasClass('next')) {
+          pageNum = self.currentPage + 1
+        } else {
+          // For numbered links, try to extract from text if URL parsing failed
+          if (pageNum === 1 && href) {
+            const linkText = $(this).text().trim()
+            const textPageNum = parseInt(linkText)
+            if (!isNaN(textPageNum) && textPageNum > 0) {
+              pageNum = textPageNum
+            }
+          }
+        }
+
+        self.currentPage = pageNum
         self.performSearch()
 
-        // Scroll to top of results
-        $('html, body').animate({
-          scrollTop: self.$resultsContainer.offset().top - 100
-        }, 300)
+        // Scroll to top of results - with safety check
+        if (self.$resultsContainer.length && self.$resultsContainer.offset()) {
+          $('html, body').animate({
+            scrollTop: self.$resultsContainer.offset().top - 100
+          }, 300)
+        }
       })
     },
 
@@ -126,7 +153,7 @@ jQuery(document).ready(function($) {
 
         error: function(xhr, status, error) {
           if (status !== 'abort') {
-            console.error('AJAX Error:', error)
+            console.error('AJAX Error:', error, xhr.responseText)
             self.showError('Connection error. Please check your internet connection and try again.')
           }
         },
@@ -139,24 +166,17 @@ jQuery(document).ready(function($) {
     },
 
     updateResults: function(response) {
-      // Update actors grid
-      const $actorsContainer = $('.actors-grid').parent()
-      $actorsContainer.html(response.html)
+      // Update actors grid - reemplazar todo el contenido del contenedor de resultados
+      const $resultsContainer = $('#actors-results-container')
+      $resultsContainer.html(response.html)
 
-      // Update pagination
-      const $paginationContainer = $('.pagination-wrapper')
+      // Update pagination - si hay paginación, agregarla después del grid
       if (response.pagination) {
-        if ($paginationContainer.length) {
-          $paginationContainer.replaceWith(response.pagination)
-        } else {
-          $('.actors-archive-container').append(response.pagination)
-        }
-      } else {
-        $paginationContainer.remove()
+        $resultsContainer.append(response.pagination)
       }
 
       // Add fade-in animation
-      $('.actors-grid').hide().fadeIn(400)
+      $('#actors-grid').hide().fadeIn(400)
     },
 
     updateResultsCount: function(count, filters) {
@@ -231,12 +251,12 @@ jQuery(document).ready(function($) {
 
     showLoading: function() {
       this.$loadingOverlay.addClass('visible')
-      $('.actors-grid').addClass('loading')
+      $('#actors-grid').addClass('loading')
     },
 
     hideLoading: function() {
       this.$loadingOverlay.removeClass('visible')
-      $('.actors-grid').removeClass('loading')
+      $('#actors-grid').removeClass('loading')
     },
 
     enableForm: function() {
@@ -245,13 +265,13 @@ jQuery(document).ready(function($) {
 
     showError: function(message) {
       const $error = $(`
-        <div class="actors-error-message">
+        <div class="error-message">
           <p>${message}</p>
           <button class="retry-btn">Try Again</button>
         </div>
       `)
 
-      $('.actors-grid').parent().html($error)
+      $('#actors-grid').parent().html($error)
 
       // Bind retry button
       $error.find('.retry-btn').on('click', () => {

@@ -6,16 +6,16 @@
 get_header(); ?>
 
 <div class="archive-actors-content">
-    <div class="hero-section">
+    <div class="main-banner">
         <h1><?php _e('All Actors', 'movies-theme'); ?></h1>
         <p><?php _e('Browse our complete collection of actors', 'movies-theme'); ?></p>
     </div>
 
-    <div class="actors-archive-container" id="actors-archive-container">
+    <div class="container" id="actors-archive-container">
         <!-- Filters Section -->
-        <div class="actors-filters">
-            <form method="GET" action="" class="filters-form" id="actors-filters-form">
-                <div class="filter-row">
+        <div class="actors-filters filters-container">
+            <form method="GET" action="filters-actors" class="filters-form" id="actors-filters-form">
+               <div class="filters-form-actor">
                     <div class="filter-group">
                         <label for="actor-search"><?php _e('Search by Name:', 'movies-theme'); ?></label>
                         <input type="text" 
@@ -87,11 +87,11 @@ get_header(); ?>
         </div>
 
         <!-- Actors Grid Container -->
-        <div id="actors-results-container">
+        <div id="actors-results-container" class="container">
             <?php if (have_posts()) : ?>
-                <div class="actors-grid">
+                <div class="archive-grid" id= "actors-grid">
                     <?php while (have_posts()) : the_post(); ?>
-                        <article class="actor-card-archive">
+                        <article class="actor-card">
                             <?php if (has_post_thumbnail()) : ?>
                                 <div class="actor-photo">
                                     <a href="<?php the_permalink(); ?>">
@@ -161,7 +161,7 @@ get_header(); ?>
                 </div>
 
             <?php else : ?>
-                <div class="no-actors-found">
+                <div class="no-results-found">
                     <h2><?php _e('No actors found', 'movies-theme'); ?></h2>
                     <p><?php _e('Try adjusting your filters or search terms.', 'movies-theme'); ?></p>
                 </div>

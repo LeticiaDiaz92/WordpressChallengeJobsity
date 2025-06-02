@@ -12,43 +12,18 @@ if (!defined('ABSPATH')) {
  * Render callback for Upcoming Movies block
  */
 function movies_theme_render_upcoming_movies_block($attributes) {
-    $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 10; // Default to 10
+    $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 10;
     $show_date = isset($attributes['showDate']) ? $attributes['showDate'] : true;
     $show_genre = isset($attributes['showGenre']) ? $attributes['showGenre'] : true;
 
-    $query_args = array(
-        'post_type' => 'upcoming',
-        'posts_per_page' => 10,
-        'post_status' => 'publish',
-        'orderby' => 'date',
-        'order' => 'ASC'
-    );
-
-    $upcoming_query = new WP_Query($query_args);
-    $upcoming_movies = $upcoming_query->posts;
-
-
-    // Limpiar la consulta
-    wp_reset_postdata();
-
-    // Agrupar por mes y año
-    $grouped_movies = array();
-    foreach ($upcoming_movies as $movie) {
-        $post_date = $movie->post_date;
-        if ($post_date) {
-            $month_year = date_i18n('F Y', strtotime($post_date));
-            if (!isset($grouped_movies[$month_year])) {
-                $grouped_movies[$month_year] = array();
-            }
-            $grouped_movies[$month_year][] = $movie;
-        }
-    }
+    // Use the proper function that groups by release_date metadata
+    $grouped_movies = movies_get_upcoming_movies($limit);
 
     ob_start();
 
     if (!empty($grouped_movies)): ?>
         <div class="wp-block-movies-theme-upcoming-movies">
-            <div class="movies-grid-by-month">
+            <div class="archive-grid-by-month">
                 <?php foreach ($grouped_movies as $month_year => $movies): ?>
                     <div class="month-column">
                         <h3 class="month-title">
@@ -105,11 +80,11 @@ function movies_theme_render_movie_card($movie, $show_date = true, $show_genre =
             
             <?php if ($show_date): ?>
                 <?php 
-                $post_date = $movie->post_date;
-                if ($post_date): ?>
+                $release_date = get_post_meta($movie->ID, 'release_date', true);
+                if ($release_date): ?>
                     <div class="release-date">
                         <strong><?php _e('Release Date:', 'movies-theme'); ?></strong>
-                        <?php echo date_i18n('F j, Y', strtotime($post_date)); ?>
+                        <?php echo date_i18n('F j, Y', strtotime($release_date)); ?>
                     </div>
                 <?php endif; ?>
             <?php endif; ?>

@@ -39,7 +39,7 @@ get_header(); ?>
                     <?php foreach ($upcoming_movies_grouped as $month_year => $movies): ?>
                         <div class="month-group">
                             <h3 class="month-title"><?php echo esc_html($month_year); ?></h3>
-                            <div class="movies-grid">
+                            <div class="archive-grid">
                                 <?php foreach (array_slice($movies, 0, 4) as $movie): ?>
                                     <article class="movie-card">
                                         <?php if (has_post_thumbnail($movie->ID)): ?>
@@ -98,7 +98,7 @@ get_header(); ?>
             <?php
             $popular_actors = movies_get_popular_actors(10);
             if (!empty($popular_actors)): ?>
-                <div class="actors-grid">
+                <div class="archive-grid">
                     <?php foreach ($popular_actors as $actor): ?>
                         <article class="actor-card">
                             <?php if (has_post_thumbnail($actor->ID)): ?>

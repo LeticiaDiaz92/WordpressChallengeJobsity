@@ -107,8 +107,9 @@
   background-color: $background-light;
   border-radius: $border-radius-lg;
   box-shadow: $box-shadow-md;
-  padding: $spacing-lg;
+  overflow: hidden;
   transition: transform $transition-speed-normal ease;
+  padding: $spacing-md;
   
   &:hover {
     transform: translateY(-2px);

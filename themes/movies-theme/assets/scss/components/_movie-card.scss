@@ -5,136 +5,90 @@
 @use '../mixins' as *;
 
 .movie-card {
-  @include card-style;
-  position: relative;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   overflow: hidden;
-  
-  .movie-poster {
-    @include aspect-ratio(2, 3); // Movie poster ratio
-    margin-bottom: $spacing-md;
-    border-radius: $border-radius-md;
-    overflow: hidden;
-    
-    img {
-      transition: transform $transition-speed-slow ease;
-    }
-  }
-  
-  .movie-info {
-    position: relative;
-    z-index: 2;
-    
-    .movie-title {
-      font-size: $font-size-large;
-      font-weight: $font-weight-bold;
-      margin-bottom: $spacing-sm;
-      @include text-clamp(2);
-      
-      a {
-        color: $text-color;
-        text-decoration: none;
-        
-        &:hover {
-          color: $primary-color;
-        }
-      }
-    }
-    
-    .movie-year {
-      color: $accent-color;
-      font-size: $font-size-small;
-      font-weight: $font-weight-medium;
-      margin-bottom: $spacing-xs;
-    }
-    
-    .movie-rating {
-      display: flex;
-      align-items: center;
-      gap: $spacing-xs;
-      margin-bottom: $spacing-sm;
-      
-      .stars {
-        color: $accent-color;
-        font-size: $font-size-small;
-      }
-      
-      .rating-value {
-        font-size: $font-size-small;
-        color: lighten($text-color, 20%);
-      }
-    }
-    
-    .movie-genres {
-      display: flex;
-      flex-wrap: wrap;
-      gap: $spacing-xs;
-      margin-bottom: $spacing-md;
-      
-      .genre-tag {
-        padding: $spacing-xs $spacing-sm;
-        background-color: $border-color;
-        color: $text-color;
-        font-size: $font-size-small;
-        border-radius: $border-radius-sm;
-        text-decoration: none;
-        transition: background-color $transition-speed-normal ease;
-        
-        &:hover {
-          background-color: $primary-color;
-        }
-      }
-    }
-    
-    .movie-excerpt {
-      @include text-clamp(3);
-      font-size: $font-size-small;
-      line-height: $line-height-base;
-      color: lighten($text-color, 10%);
-      margin-bottom: $spacing-md;
-    }
-  }
-  
-  .movie-actions {
-    display: flex;
-    gap: $spacing-sm;
-    
-    .btn {
-      flex: 1;
-      text-align: center;
-      font-size: $font-size-small;
-    }
-    
-    .wishlist-btn {
-      @include button-style($border-color, $text-color, $primary-color);
-      
-      &.in-wishlist {
-        background-color: $primary-color;
-      }
-    }
-  }
-  
-  // Hover effects
+  transition: transform 0.3s, box-shadow 0.3s;
+
   &:hover {
-    .movie-poster img {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+
+  .movie-poster {
+    position: relative;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+
+    &:hover img {
       transform: scale(1.05);
+    }
+  }
+
+  .movie-poster.no-poster {
+    height: 350px;
+    background: #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .no-poster-placeholder {
+      color: #666;
+      font-size: 1rem;
+    }
+  }
+
+  .movie-info {
+    padding: 1.5rem;
+
+    .movie-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 1rem 0;
+      line-height: 1.3;
+
+      a {
+        color: #333;
+        text-decoration: none;
+        transition: color 0.3s;
+
+        &:hover {
+          color: #667eea;
+        }
+      }
+    }
+
+    .release-date,
+    .movie-genres,
+    .movie-rating {
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: #666;
+
+      strong {
+        color: #333;
+        font-weight: 600;
+      }
+    }
+
+    .movie-rating .stars {
+      color: #f39c12;
+      font-weight: 600;
+    }
+
+    .movie-excerpt {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #777;
+      margin-top: 1rem;
     }
   }
 }
 
-// Movie grid
-// -----------------------------------------------------------------------------
-.movies-grid {
-  @include grid(1, $spacing-lg);
-  
-  @include respond-to('sm') {
-    @include grid(2, $spacing-lg);
-  }
-  
-  @include respond-to('md') {
-    @include grid(3, $spacing-lg);
-  }
-  
-  @include respond-to('lg') {
-    @include grid(4, $spacing-lg);
-  }
-} 

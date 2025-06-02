@@ -12,6 +12,9 @@
   padding: 0 $container-padding;
 }
 
+
+// Lo
+
 // Site structure
 // -----------------------------------------------------------------------------
 .site {
@@ -36,15 +39,6 @@
   }
 }
 
-.widget-area {
-  width: 100%;
-  margin-top: $spacing-xl;
-  
-  @include respond-to('lg') {
-    width: 30%;
-    margin-top: 0;
-  }
-}
 
 // Main layout wrapper
 // -----------------------------------------------------------------------------
@@ -106,5 +100,35 @@
       flex: 0 0 math.percentage(math.div($i, $grid-columns));
       max-width: math.percentage(math.div($i, $grid-columns));
     }
+  }
+} 
+
+
+// Actor grid
+// -----------------------------------------------------------------------------
+.archive-grid {
+  transition: opacity 0.3s ease;
+  @include grid(1, $spacing-lg);
+  
+  @include respond-to('sm') {
+    @include grid(2, $spacing-lg);
+  }
+  
+  @include respond-to('md') {
+    @include grid(3, $spacing-lg);
+  }
+  
+  @include respond-to('lg') {
+    @include grid(4, $spacing-lg);
+  }
+  
+  @include respond-to('xl') {
+    @include grid(5, $spacing-lg);
+  }
+
+  &.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
   }
 } 

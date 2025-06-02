@@ -5,40 +5,61 @@
 @use '../mixins' as *;
 
 .filters-container {
-  background-color: $background-light;
+  background-color: $background-filters;
   padding: $spacing-lg;
   border-radius: $border-radius-lg;
   margin-bottom: $spacing-xl;
   box-shadow: $box-shadow-sm;
 }
 
+
 .filters-form {
-  @include grid(1, $spacing-md);
+  .filters-form-movie {
+    @include grid(4, $spacing-md);
+  }
   
- 
-  
+  .filters-form-actor {
+    @include grid(3, $spacing-md);
+  }
+
+
   .filter-group {
     label {
       display: block;
       margin-bottom: $spacing-xs;
       font-size: $font-size-small;
-      font-weight: $font-weight-medium;
-      color: $text-color;
+      font-weight: $font-weight-bold;
+      color: $text-color-dark;
     }
     
     select,
     input {
       width: 100%;
-      padding: $spacing-sm;
+      padding: $spacing-md;
       border: 1px solid $border-color;
-      border-radius: $border-radius-md;
+      border-radius: $border-radius-lg;
       background-color: $background-color;
       color: $text-color;
       font-size: $font-size-small;
+      transition: border-color 0.3s, box-shadow 0.3s;
+
       
       &:focus {
         outline: none;
         border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+      }
+
+      &:disabled {
+        background: #f8f9fa;
+        color: #999;
+        cursor: not-allowed;
+      }
+
+      input[type="text"] {
+        &::placeholder {
+          color: #999;
+        }
       }
     }
   }
@@ -80,3 +101,155 @@
     }
   }
 } 
+
+
+.no-results-found {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f8f9fa;
+  border-radius: $border-radius-lg;
+
+  h2 {
+    font-size: $font-size-large;
+    color: $text-color-dark;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: $font-size-base;
+    color: $text-color-dark;
+    margin: 0;
+  }
+} 
+
+
+// Error states
+.error-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: #f8f9fa;
+  border-radius: 1rem;
+  border-left: 4px solid $primary-color;
+
+  p {
+    color: $primary-color;
+    font-size: $font-size-base;
+    margin-bottom: 1.5rem;
+  }
+
+  .retry-btn {
+    background: $primary-color;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background: #c82333;
+    }
+  }
+}
+
+
+// Loading Overlay
+.actors-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .loading-spinner {
+    text-align: center;
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #e74c3c;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    p {
+      color: #666;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+}
+
+// Loading Overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .loading-spinner {
+    text-align: center;
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid $primary-color;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    p {
+      color: $text-color-dark;
+      font-weight: $font-weight-bold;
+      margin: 0;
+    }
+  }
+}
+
+.results-info {
+  margin-bottom: 1.5rem;
+
+  .results-count {
+    font-size: $font-size-base;
+    color: $text-color-dark;
+    margin: 0;
+    padding: 1rem;
+    background: $background-filters;
+    border-left: 4px solid $primary-color;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+}
