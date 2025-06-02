@@ -60,6 +60,8 @@ jQuery(document).ready(function($) {
             auto_sync: $('#auto_sync').is(':checked') ? '1' : '0',
             sync_frequency: $('#sync_frequency').val(),
             import_limit: $('#import_limit').val(),
+            upcoming_months_ahead: $('#upcoming_months_ahead').val(),
+            update_existing_movies: $('#update_existing_movies').is(':checked') ? '1' : '0',
             cache_duration: $('#cache_duration').val(),
             enable_logging: $('#enable_logging').is(':checked') ? '1' : '0',
             nonce: tmdb_ajax.nonce

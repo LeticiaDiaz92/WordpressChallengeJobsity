@@ -100,6 +100,28 @@ class TMDB_Admin {
                                         <p class="description"><?php _e('Maximum number of items to import per sync', 'tmdb-api-connector'); ?></p>
                                     </td>
                                 </tr>
+                                
+                                <tr>
+                                    <th scope="row">
+                                        <label for="upcoming_months_ahead"><?php _e('Upcoming Movies Range (months)', 'tmdb-api-connector'); ?></label>
+                                    </th>
+                                    <td>
+                                        <?php $upcoming_months_ahead = get_option('tmdb_upcoming_months_ahead', 6); ?>
+                                        <input type="number" id="upcoming_months_ahead" name="upcoming_months_ahead" value="<?php echo esc_attr($upcoming_months_ahead); ?>" min="1" max="24" />
+                                        <p class="description"><?php _e('How many months ahead to look for upcoming movies', 'tmdb-api-connector'); ?></p>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <th scope="row">
+                                        <label for="update_existing_movies"><?php _e('Update Existing Movies', 'tmdb-api-connector'); ?></label>
+                                    </th>
+                                    <td>
+                                        <?php $update_existing = get_option('tmdb_update_existing_movies', '1'); ?>
+                                        <input type="checkbox" id="update_existing_movies" name="update_existing_movies" value="1" <?php checked($update_existing, '1'); ?> />
+                                        <label for="update_existing_movies"><?php _e('Update movie data if it already exists', 'tmdb-api-connector'); ?></label>
+                                    </td>
+                                </tr>
                             </table>
                         </div>
                         

@@ -125,7 +125,6 @@
   &::before {
     content: '';
     display: block;
-    padding-top: math.percentage(math.div($height, $width));
   }
   
   > img,

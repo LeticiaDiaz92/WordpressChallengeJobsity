@@ -140,9 +140,9 @@ get_header(); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                        </article>
+                    </article>
                     <?php endforeach; ?>
-                </div>
+            </div>
             <?php else: ?>
                 <p class="no-content"><?php _e('No popular actors found.', 'movies-theme'); ?></p>
             <?php endif; ?>
@@ -242,9 +242,9 @@ get_header(); ?>
                     <span class="stat-number"><?php echo date('Y'); ?></span>
                     <span class="stat-label"><?php _e('Current Year', 'movies-theme'); ?></span>
                 </div>
-            </div>
-        </section>
-
+                </div>
+            </section>
+            
     </div>
 </div>
 

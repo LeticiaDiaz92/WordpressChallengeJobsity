@@ -71,7 +71,9 @@ function movies_theme_scripts() {
 add_action('wp_enqueue_scripts', 'movies_theme_scripts');
 
 // Include theme files
-require_once MOVIES_THEME_PATH . '/inc/custom-post-types.php';
+require_once MOVIES_THEME_PATH . '/inc/custom-post-type-movies.php';
+require_once MOVIES_THEME_PATH . '/inc/custom-post-type-actors.php';
+require_once MOVIES_THEME_PATH . '/inc/custom-post-type-upcoming.php';
 require_once MOVIES_THEME_PATH . '/inc/custom-fields.php';
 require_once MOVIES_THEME_PATH . '/inc/api-functions.php';
 require_once MOVIES_THEME_PATH . '/inc/widgets.php';
@@ -82,4 +84,7 @@ require_once MOVIES_THEME_PATH . '/inc/helpers.php';
 // Include custom widgets
 require_once MOVIES_THEME_PATH . '/widgets/upcoming-movies-widget.php';
 require_once MOVIES_THEME_PATH . '/widgets/popular-actors-widget.php';
-require_once MOVIES_THEME_PATH . '/widgets/movie-search-widget.php'; 
+require_once MOVIES_THEME_PATH . '/widgets/movie-search-widget.php';
+
+// Include blocks
+require_once MOVIES_THEME_PATH . '/inc/blocks.php'; 

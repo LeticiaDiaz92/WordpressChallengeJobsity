@@ -1,0 +1,153 @@
+// Upcoming Movies Grid by Month - Netflix Style
+// =============================================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.wp-block-movies-theme-upcoming-movies {
+  background: #181818;
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.movies-grid-by-month {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 3rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.month-column {
+  background: #232323;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+
+.month-title {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e50914;
+  letter-spacing: 0.02em;
+  
+  .calendar-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2em;
+  }
+}
+
+.month-movies {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.movie-item {
+  background: #2a2a2a;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  }
+}
+
+.movie-item .movie-card {
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  margin: 0;
+  height: auto;
+}
+
+.movie-item .movie-poster {
+  flex: 0 0 120px;
+  
+  @media (max-width: 480px) {
+    flex: none;
+  }
+  
+  img {
+    width: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    
+    @media (max-width: 480px) {
+      height: 200px;
+    }
+  }
+}
+
+.movie-item .movie-poster.no-poster {
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  border-radius: 0.5rem;
+  
+  .no-poster-placeholder {
+    color: #666;
+    font-size: 0.8rem;
+  }
+}
+
+.movie-item .movie-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.movie-item .movie-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.movie-item .movie-title a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s;
+  
+  &:hover {
+    color: #e50914;
+  }
+}
+
+.movie-item .release-date,
+.movie-item .movie-genres {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  line-height: 1.4;
+}
+
+.movie-item .release-date strong,
+.movie-item .movie-genres strong {
+  color: #fff;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+// No movies message
+.no-movies {
+  color: #b3b3b3;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 2rem;
+  margin: 0;
+} 

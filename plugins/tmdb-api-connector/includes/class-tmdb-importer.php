@@ -126,42 +126,79 @@ class TMDB_Importer {
      */
     private function import_upcoming_movies() {
         $limit = get_option('tmdb_import_limit', 20);
+        $update_existing = get_option('tmdb_update_existing_movies', '1') === '1';
         $imported = 0;
+        $updated = 0;
         $errors = array();
         
-        TMDB_Logger::log('Starting upcoming movies import', 'info', 'upcoming_movies');
+        TMDB_Logger::log("Starting upcoming movies import (limit: {$limit}, update_existing: " . ($update_existing ? 'yes' : 'no') . ")", 'info', 'upcoming_movies');
         
         for ($page = 1; $page <= ceil($limit / 20); $page++) {
+            TMDB_Logger::log("Fetching page {$page} from TMDB API...", 'info', 'upcoming_movies');
+            
             $response = $this->api->get_upcoming_movies($page);
             
             if (!$response['success']) {
-                $errors[] = $response['message'];
+                $error_msg = "API request failed for page {$page}: " . $response['message'];
+                TMDB_Logger::log($error_msg, 'error', 'upcoming_movies');
+                $errors[] = $error_msg;
                 continue;
             }
             
-            $movies = $response['data']['results'];
+            $movies = $response['data']['results'] ?? array();
+            $movie_count = count($movies);
+            
+            TMDB_Logger::log("Page {$page}: Found {$movie_count} movies", 'info', 'upcoming_movies');
+            error_log("Page {$page} Movies: " . json_encode(array_column($movies, 'title')));
+            
+            if (empty($movies)) {
+                TMDB_Logger::log("No movies found on page {$page}, stopping import", 'warning', 'upcoming_movies');
+                break;
+            }
             
             foreach ($movies as $movie_data) {
-                if ($imported >= $limit) {
+                if (($imported + $updated) >= $limit) {
+                    TMDB_Logger::log("Reached import limit of {$limit}, stopping", 'info', 'upcoming_movies');
                     break 2;
                 }
                 
-                $result = $this->import_movie($movie_data);
+                $movie_title = $movie_data['title'] ?? 'Unknown';
+                $movie_date = $movie_data['release_date'] ?? 'Unknown';
+                
+                TMDB_Logger::log("Processing movie: {$movie_title} (Release: {$movie_date})", 'info', 'upcoming_movies');
+                
+                $result = $this->import_or_update_upcoming_movie($movie_data);
+                
                 if ($result['success']) {
-                    $imported++;
+                    if ($result['action'] === 'imported') {
+                        $imported++;
+                        TMDB_Logger::log("✓ Imported: {$movie_title}", 'success', 'upcoming_movies');
+                    } else {
+                        $updated++;
+                        TMDB_Logger::log("✓ Updated: {$movie_title}", 'success', 'upcoming_movies');
+                    }
                 } else {
+                    TMDB_Logger::log("✗ Failed: {$movie_title} - " . $result['message'], 'error', 'upcoming_movies');
                     $errors[] = $result['message'];
                 }
             }
         }
         
-        $message = sprintf(__('Imported %d upcoming movies', 'tmdb-api-connector'), $imported);
-        TMDB_Logger::log($message, 'success', 'upcoming_movies', $imported);
+        $total_processed = $imported + $updated;
+        $message = sprintf(__('Processed %d upcoming movies (%d imported, %d updated)', 'tmdb-api-connector'), 
+                          $total_processed, $imported, $updated);
+        
+        if (!empty($errors)) {
+            $message .= sprintf(__(' with %d errors', 'tmdb-api-connector'), count($errors));
+        }
+        
+        TMDB_Logger::log($message, 'success', 'upcoming_movies', $total_processed);
         
         return array(
             'success' => true,
             'message' => $message,
             'imported' => $imported,
+            'updated' => $updated,
             'errors' => $errors
         );
     }
@@ -425,13 +462,16 @@ class TMDB_Importer {
      * Set movie genres
      */
     private function set_movie_genres($post_id, $genres) {
+        $post_type = get_post_type($post_id);
+        $taxonomy = ($post_type === 'upcoming') ? 'upcoming_genre' : 'genre';
+        
         $genre_ids = array();
         
         foreach ($genres as $genre) {
-            $term = get_term_by('name', $genre['name'], 'genre');
+            $term = get_term_by('name', $genre['name'], $taxonomy);
             
             if (!$term) {
-                $term = wp_insert_term($genre['name'], 'genre');
+                $term = wp_insert_term($genre['name'], $taxonomy);
                 if (!is_wp_error($term)) {
                     update_term_meta($term['term_id'], 'tmdb_id', $genre['id']);
                     $genre_ids[] = $term['term_id'];
@@ -442,7 +482,7 @@ class TMDB_Importer {
         }
         
         if (!empty($genre_ids)) {
-            wp_set_post_terms($post_id, $genre_ids, 'genre');
+            wp_set_post_terms($post_id, $genre_ids, $taxonomy);
         }
     }
     
@@ -472,5 +512,211 @@ class TMDB_Importer {
         if ($attachment_id) {
             set_post_thumbnail($post_id, $attachment_id);
         }
+    }
+    
+    /**
+     * Import or update a single movie (DEBUG VERSION)
+     */
+    private function import_or_update_movie($movie_data) {
+        $update_existing = get_option('tmdb_update_existing_movies', '1') === '1';
+        
+        // Check if movie already exists
+        $existing = get_posts(array(
+            'post_type' => 'movie',
+            'meta_key' => 'tmdb_id',
+            'meta_value' => $movie_data['id'],
+            'post_status' => 'any',
+            'numberposts' => 1
+        ));
+        
+        $is_update = !empty($existing);
+        $title = $movie_data['title'] ?? 'Unknown';
+        
+        // If movie exists and updates are disabled, skip it
+        if ($is_update && !$update_existing) {
+            return array(
+                'success' => false,
+                'message' => sprintf(__('Movie "%s" already exists (updates disabled)', 'tmdb-api-connector'), $title)
+            );
+        }
+        
+        $post_id = $is_update ? $existing[0]->ID : null;
+        
+        if ($is_update) {
+            TMDB_Logger::log("Movie '{$title}' already exists (ID: {$post_id}) - will update", 'info', 'upcoming_movies');
+        } else {
+            TMDB_Logger::log("Movie '{$title}' is new - will import", 'info', 'upcoming_movies');
+        }
+        
+        // Get detailed movie information
+        $details_response = $this->api->get_movie_details($movie_data['id']);
+        if (!$details_response['success']) {
+            return $details_response;
+        }
+        
+        $details = $details_response['data'];
+        
+        if ($is_update) {
+            // Update existing movie
+            $post_data = array(
+                'ID' => $post_id,
+                'post_title' => sanitize_text_field($details['title']),
+                'post_content' => wp_kses_post($details['overview']),
+                'post_status' => 'publish',
+                'post_date' => $details['release_date'] ? date('Y-m-d H:i:s', strtotime($details['release_date'])) : get_post($post_id)->post_date
+            );
+            
+            $result = wp_update_post($post_data);
+            
+            if (is_wp_error($result)) {
+                return array(
+                    'success' => false,
+                    'message' => $result->get_error_message()
+                );
+            }
+        } else {
+            // Create new movie post
+            $post_data = array(
+                'post_title' => sanitize_text_field($details['title']),
+                'post_content' => wp_kses_post($details['overview']),
+                'post_status' => 'publish',
+                'post_type' => 'movie',
+                'post_date' => $details['release_date'] ? date('Y-m-d H:i:s', strtotime($details['release_date'])) : current_time('mysql')
+            );
+            
+            $post_id = wp_insert_post($post_data);
+            
+            if (is_wp_error($post_id)) {
+                return array(
+                    'success' => false,
+                    'message' => $post_id->get_error_message()
+                );
+            }
+        }
+        
+        // Add/update movie metadata
+        $this->save_movie_metadata($post_id, $details);
+        
+        // Set genres
+        $this->set_movie_genres($post_id, $details['genres']);
+        
+        // Download and set featured image (only if not exists or updating)
+        if (!empty($details['poster_path']) && (!$is_update || !has_post_thumbnail($post_id))) {
+            $this->set_movie_poster($post_id, $details['poster_path'], $details['title']);
+        }
+        
+        $action = $is_update ? 'updated' : 'imported';
+        $message = sprintf(__('Movie "%s" %s successfully', 'tmdb-api-connector'), 
+                          $details['title'], $action);
+        
+        return array(
+            'success' => true,
+            'message' => $message,
+            'post_id' => $post_id,
+            'action' => $action
+        );
+    }
+    
+    /**
+     * Import or update a single upcoming movie
+     */
+    private function import_or_update_upcoming_movie($movie_data) {
+        $update_existing = get_option('tmdb_update_existing_movies', '1') === '1';
+        
+        // Check if movie already exists
+        $existing = get_posts(array(
+            'post_type' => 'upcoming',
+            'meta_key' => 'tmdb_id',
+            'meta_value' => $movie_data['id'],
+            'post_status' => 'any',
+            'numberposts' => 1
+        ));
+        
+        $is_update = !empty($existing);
+        $title = $movie_data['title'] ?? 'Unknown';
+        
+        // If movie exists and updates are disabled, skip it
+        if ($is_update && !$update_existing) {
+            return array(
+                'success' => false,
+                'message' => sprintf(__('Movie "%s" already exists (updates disabled)', 'tmdb-api-connector'), $title)
+            );
+        }
+        
+        $post_id = $is_update ? $existing[0]->ID : null;
+        
+        if ($is_update) {
+            TMDB_Logger::log("Movie '{$title}' already exists (ID: {$post_id}) - will update", 'info', 'upcoming_movies');
+        } else {
+            TMDB_Logger::log("Movie '{$title}' is new - will import", 'info', 'upcoming_movies');
+        }
+        
+        // Get detailed movie information
+        $details_response = $this->api->get_movie_details($movie_data['id']);
+        if (!$details_response['success']) {
+            return $details_response;
+        }
+        
+        $details = $details_response['data'];
+        
+        if ($is_update) {
+            // Update existing movie
+            $post_data = array(
+                'ID' => $post_id,
+                'post_title' => sanitize_text_field($details['title']),
+                'post_content' => wp_kses_post($details['overview']),
+                'post_status' => 'publish',
+                'post_date' => $details['release_date'] ? date('Y-m-d H:i:s', strtotime($details['release_date'])) : get_post($post_id)->post_date
+            );
+            
+            $result = wp_update_post($post_data);
+            
+            if (is_wp_error($result)) {
+                return array(
+                    'success' => false,
+                    'message' => $result->get_error_message()
+                );
+            }
+        } else {
+            // Create new movie post
+            $post_data = array(
+                'post_title' => sanitize_text_field($details['title']),
+                'post_content' => wp_kses_post($details['overview']),
+                'post_status' => 'publish',
+                'post_type' => 'upcoming',
+                'post_date' => $details['release_date'] ? date('Y-m-d H:i:s', strtotime($details['release_date'])) : current_time('mysql')
+            );
+            
+            $post_id = wp_insert_post($post_data);
+            
+            if (is_wp_error($post_id)) {
+                return array(
+                    'success' => false,
+                    'message' => $post_id->get_error_message()
+                );
+            }
+        }
+        
+        // Add/update movie metadata
+        $this->save_movie_metadata($post_id, $details);
+        
+        // Set genres
+        $this->set_movie_genres($post_id, $details['genres']);
+        
+        // Download and set featured image (only if not exists or updating)
+        if (!empty($details['poster_path']) && (!$is_update || !has_post_thumbnail($post_id))) {
+            $this->set_movie_poster($post_id, $details['poster_path'], $details['title']);
+        }
+        
+        $action = $is_update ? 'updated' : 'imported';
+        $message = sprintf(__('Movie "%s" %s successfully', 'tmdb-api-connector'), 
+                          $details['title'], $action);
+        
+        return array(
+            'success' => true,
+            'message' => $message,
+            'post_id' => $post_id,
+            'action' => $action
+        );
     }
 } 

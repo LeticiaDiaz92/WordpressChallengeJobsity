@@ -87,10 +87,31 @@ class TMDB_API {
     }
     
     /**
-     * Get upcoming movies
+     * Get upcoming movies using discover endpoint with date filtering
      */
     public function get_upcoming_movies($page = 1) {
-        return $this->make_request('/movie/upcoming', array('page' => $page));
+        $today = date('Y-m-d');
+        
+        // Get the upcoming movies range setting (in months) with fallback
+        $months_ahead = get_option('tmdb_upcoming_months_ahead', 6);
+        if (empty($months_ahead) || $months_ahead <= 0) {
+            $months_ahead = 6; // Default fallback
+        }
+
+        $date = new DateTime();
+        $calculate_months = $date->add(new DateInterval('P' . $months_ahead . 'M'));
+        $max_date = $calculate_months->format('Y-m-d');
+        
+        $params = array(
+            'page' => $page,
+            'primary_release_date.gte' => $today,
+            'primary_release_date.lte' => $max_date,
+        );
+        
+      
+        $result = $this->make_request('/discover/movie', $params);
+        
+        return $result;
     }
     
     /**
