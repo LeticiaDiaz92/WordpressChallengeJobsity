@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
  * Render callback for Upcoming Movies block
  */
 function movies_theme_render_upcoming_movies_block($attributes) {
-    $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 10;
+    $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 0;
     $show_date = isset($attributes['showDate']) ? $attributes['showDate'] : true;
     $show_genre = isset($attributes['showGenre']) ? $attributes['showGenre'] : true;
 

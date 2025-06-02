@@ -13,80 +13,49 @@ if (!defined('ABSPATH')) {
  * Get upcoming movies (from the new 'upcoming' post type, grouped by month/year)
  */
 function movies_get_upcoming_movies($limit = 10) {
-    $today = date('Y-m-d');
-    $max_date = date('Y-m-d', strtotime('+12 months')); // Look up to 1 year ahead
     
     // Get all upcoming posts without meta query filters
     $all_upcoming = get_posts(array(
         'post_type' => 'upcoming',
-        'posts_per_page' => -1, // Get all posts
-        'post_status' => 'publish',
+        'posts_per_page' => $limit, // Get ALL posts first, then filter
+        'post_status' => array('future'), // Use 'future' status as shown in logs
         'orderby' => 'title',
         'order' => 'ASC'
     ));
     
-    // Debug: Log what we found
-    if (WP_DEBUG) {
-        error_log('Found ' . count($all_upcoming) . ' total upcoming movies in database');
-    }
+    // Use all upcoming movies without date validation
+    $valid_upcoming = $all_upcoming;
     
-    // Filter and collect movies with valid future release dates
-    $valid_upcoming = array();
-    foreach ($all_upcoming as $movie) {
-        $release_date = get_post_meta($movie->ID, 'release_date', true);
-        
-        // Debug each movie
-        if (WP_DEBUG) {
-            error_log('Movie: ' . $movie->post_title . ' - Release date: ' . ($release_date ?: 'NOT SET'));
-        }
-        
-        // Check if movie has a valid future release date
-        if ($release_date && $release_date > $today && $release_date <= $max_date) {
-            $valid_upcoming[] = $movie;
-        }
-    }
-    
-    // Sort by release date
+    // Sort by release date (movies with release_date first, then by date)
     usort($valid_upcoming, function($a, $b) {
         $date_a = get_post_meta($a->ID, 'release_date', true);
         $date_b = get_post_meta($b->ID, 'release_date', true);
+        
+        // Movies without release date go to the end
+        if (!$date_a && !$date_b) return 0;
+        if (!$date_a) return 1;
+        if (!$date_b) return -1;
+        
         return strcmp($date_a, $date_b);
     });
     
-    // Debug: Log filtered results
-    if (WP_DEBUG) {
-        error_log('Found ' . count($valid_upcoming) . ' upcoming movies with valid future release dates between ' . $today . ' and ' . $max_date);
-        if (!empty($valid_upcoming)) {
-            $titles = array_map(function($movie) {
-                $release_date = get_post_meta($movie->ID, 'release_date', true);
-                return $movie->post_title . ' (' . $release_date . ')';
-            }, $valid_upcoming);
-            error_log('Valid upcoming movies: ' . implode(', ', $titles));
-        }
-    }
-    
     // Group by month/year and limit results
     $grouped_movies = array();
-    $count = 0;
     
     foreach ($valid_upcoming as $movie) {
-        if ($count >= $limit) {
-            break;
-        }
         
         $release_date = get_post_meta($movie->ID, 'release_date', true);
-            $month_year = date_i18n('F Y', strtotime($release_date));
         
-            if (!isset($grouped_movies[$month_year])) {
-                $grouped_movies[$month_year] = array();
-            }
-            $grouped_movies[$month_year][] = $movie;
-            $count++;
+        if ($release_date) {
+            $month_year = date_i18n('F Y', strtotime($release_date));
+        } else {
+            $month_year = 'No Release Date';
         }
-    
-    // Debug: Log grouped results
-    if (WP_DEBUG) {
-        error_log('Grouped upcoming movies: ' . count($grouped_movies) . ' months with ' . $count . ' total movies');
+        
+        if (!isset($grouped_movies[$month_year])) {
+            $grouped_movies[$month_year] = array();
+        }
+        $grouped_movies[$month_year][] = $movie;
     }
     
     return $grouped_movies;
@@ -399,6 +368,7 @@ function movies_get_filtered_upcoming($args = array()) {
         'post_type' => 'upcoming',
         'posts_per_page' => 20,
         'paged' => 1,
+        'post_status' => array('future'), // Use 'future' status
         'orderby' => 'meta_value',
         'order' => 'ASC',
         'meta_key' => 'release_date'

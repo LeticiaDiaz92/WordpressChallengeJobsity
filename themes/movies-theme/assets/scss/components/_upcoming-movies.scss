@@ -1,0 +1,57 @@
+// Upcoming Movies Grid by Month - Netflix Style
+// =============================================================================
+@use '../variables' as *;
+@use '../mixins' as *;
+
+
+.month-movies {
+  transition: opacity 0.3s ease;
+  @include grid(1, $spacing-lg);
+  
+  @include respond-to('sm') {
+    @include grid(2, $spacing-lg);
+  }
+  
+  @include respond-to('md') {
+    @include grid(3, $spacing-lg);
+  }
+  
+  @include respond-to('lg') {
+    @include grid(4, $spacing-lg);
+  }
+  
+  @include respond-to('xl') {
+    @include grid(5, $spacing-lg);
+  }
+}
+
+.month-column {
+  background: $background-light;
+  border-radius: 1rem;
+  padding: 1.5rem;
+
+  .month-title {
+    color: $primary-color;
+    font-size: $font-size-large;
+    font-weight: $font-weight-bold;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid $primary-color;
+    letter-spacing: 0.02em;
+    
+    .calendar-icon {
+      margin-right: 0.5rem;
+      font-size: $font-size-base;
+    }
+  }
+}
+
+
+// No movies message
+.no-movies {
+  color: #b3b3b3;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 2rem;
+  margin: 0;
+} 
