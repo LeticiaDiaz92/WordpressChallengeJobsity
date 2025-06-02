@@ -79,14 +79,13 @@ function movies_register_movie_taxonomies() {
 add_action('init', 'movies_register_movie_taxonomies');
 
 // ==========================================
-// ADMIN FILTERS AND COLUMNS FOR MOVIES
+// ADMIN COLUMNS FOR MOVIES
 // ==========================================
 
 /**
  * Add custom columns to Movies admin list
  */
 function movies_add_admin_columns($columns) {
-    // Insert new columns after title
     $new_columns = array();
     foreach ($columns as $key => $value) {
         $new_columns[$key] = $value;
@@ -204,95 +203,339 @@ function movies_admin_column_orderby($query) {
 }
 add_action('pre_get_posts', 'movies_admin_column_orderby');
 
-/**
- * Add filter dropdown for movie status (Upcoming vs Released)
- */
-function movies_add_admin_filters() {
-    global $typenow;
-    
-    if ($typenow === 'movie') {
-        // Status filter (Upcoming/Released)
-        $current_filter = isset($_GET['movie_status_filter']) ? $_GET['movie_status_filter'] : '';
-        ?>
-        <select name="movie_status_filter">
-            <option value=""><?php _e('All Movies', 'movies-theme'); ?></option>
-            <option value="upcoming" <?php selected($current_filter, 'upcoming'); ?>><?php _e('Upcoming Movies', 'movies-theme'); ?></option>
-            <option value="released" <?php selected($current_filter, 'released'); ?>><?php _e('Released Movies', 'movies-theme'); ?></option>
-        </select>
-        
-        <?php
-        // Year filter
-        $current_year = isset($_GET['movie_year_filter']) ? $_GET['movie_year_filter'] : '';
-        $years = movies_get_available_years();
-        
-        if (!empty($years)) {
-            ?>
-            <select name="movie_year_filter">
-                <option value=""><?php _e('All Years', 'movies-theme'); ?></option>
-                <?php foreach ($years as $year) : ?>
-                    <option value="<?php echo esc_attr($year); ?>" <?php selected($current_year, $year); ?>>
-                        <?php echo esc_html($year); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <?php
-        }
-    }
-}
-add_action('restrict_manage_posts', 'movies_add_admin_filters');
+// ==========================================
+// METABOXES FOR MOVIE DETAILS (SIMPLIFIED)
+// ==========================================
 
 /**
- * Handle admin filter queries
+ * Add metaboxes for movie edit screen
  */
-function movies_handle_admin_filters($query) {
-    global $pagenow, $typenow;
+function movies_add_meta_boxes() {
+    add_meta_box(
+        'movie_details',
+        __('Movie Details', 'movies-theme'),
+        'movies_details_metabox_callback',
+        'movie',
+        'normal',
+        'default'
+    );
     
-    if ($pagenow === 'edit.php' && $typenow === 'movie' && $query->is_main_query()) {
-        
-        // Handle status filter
-        if (!empty($_GET['movie_status_filter'])) {
-            $today = date('Y-m-d');
+    add_meta_box(
+        'movie_cast_crew',
+        __('Cast & Crew', 'movies-theme'),
+        'movies_cast_crew_metabox_callback',
+        'movie',
+        'normal',
+        'default'
+    );
+    
+    add_meta_box(
+        'movie_videos',
+        __('Trailers & Videos', 'movies-theme'),
+        'movies_videos_metabox_callback',
+        'movie',
+        'normal',
+        'default'
+    );
+    
+    add_meta_box(
+        'movie_tmdb_info',
+        __('TMDB Information', 'movies-theme'),
+        'movies_tmdb_info_metabox_callback',
+        'movie',
+        'side',
+        'default'
+    );
+}
+add_action('add_meta_boxes', 'movies_add_meta_boxes');
+
+/**
+ * Display movie details metabox (simplified)
+ */
+function movies_details_metabox_callback($post) {
+    $movie_data = get_post_meta($post->ID, 'movie_data', true);
+    
+    if (empty($movie_data)) {
+        echo '<p>' . __('No movie data found. Import or update movie data from TMDB to see details.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    $movie_data = is_string($movie_data) ? json_decode($movie_data, true) : $movie_data;
+    
+    if (!$movie_data) {
+        echo '<p>' . __('Invalid movie data.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    // Basic movie information
+    $fields = [
+        'original_title' => __('Original Title:', 'movies-theme'),
+        'original_language' => __('Original Language:', 'movies-theme'),
+        'release_date' => __('Release Date:', 'movies-theme'),
+        'runtime' => __('Runtime:', 'movies-theme'),
+        'budget' => __('Budget:', 'movies-theme'),
+        'revenue' => __('Revenue:', 'movies-theme'),
+        'vote_average' => __('Rating:', 'movies-theme'),
+        'popularity' => __('Popularity:', 'movies-theme'),
+    ];
+    
+    echo '<table class="form-table">';
+    foreach ($fields as $key => $label) {
+        if (!empty($movie_data[$key])) {
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html($label) . '</th>';
+            echo '<td>';
             
-            if ($_GET['movie_status_filter'] === 'upcoming') {
-                $query->set('meta_query', array(
-                    array(
-                        'key' => 'release_date',
-                        'value' => $today,
-                        'compare' => '>',
-                        'type' => 'DATE'
-                    )
-                ));
-            } elseif ($_GET['movie_status_filter'] === 'released') {
-                $query->set('meta_query', array(
-                    array(
-                        'key' => 'release_date',
-                        'value' => $today,
-                        'compare' => '<=',
-                        'type' => 'DATE'
-                    )
-                ));
+            switch ($key) {
+                case 'original_language':
+                    echo esc_html(strtoupper($movie_data[$key]));
+                    break;
+                case 'release_date':
+                    echo date_i18n('F j, Y', strtotime($movie_data[$key]));
+                    break;
+                case 'runtime':
+                    echo esc_html($movie_data[$key]) . ' minutes';
+                    break;
+                case 'budget':
+                case 'revenue':
+                    echo '$' . number_format($movie_data[$key]);
+                    break;
+                case 'vote_average':
+                    echo '★ ' . number_format($movie_data[$key], 1) . '/10';
+                    if (!empty($movie_data['vote_count'])) {
+                        echo ' (' . number_format($movie_data['vote_count']) . ' votes)';
+                    }
+                    break;
+                case 'popularity':
+                    echo number_format($movie_data[$key], 1);
+                    break;
+                default:
+                    echo esc_html($movie_data[$key]);
             }
+            
+            echo '</td>';
+            echo '</tr>';
         }
-        
-        // Handle year filter
-        if (!empty($_GET['movie_year_filter'])) {
-            $year = intval($_GET['movie_year_filter']);
-            $start_date = $year . '-01-01';
-            $end_date = $year . '-12-31';
+    }
+    echo '</table>';
+    
+    // Genres
+    if (!empty($movie_data['genres'])) {
+        echo '<h4>' . __('Genres', 'movies-theme') . '</h4>';
+        echo '<p>';
+        $genre_names = array_column($movie_data['genres'], 'name');
+        echo esc_html(implode(', ', $genre_names));
+        echo '</p>';
+    }
+    
+    // Production Companies
+    if (!empty($movie_data['production_companies'])) {
+        echo '<h4>' . __('Production Companies', 'movies-theme') . '</h4>';
+        echo '<ul>';
+        foreach ($movie_data['production_companies'] as $company) {
+            echo '<li>' . esc_html($company['name']);
+            if (!empty($company['origin_country'])) {
+                echo ' (' . esc_html($company['origin_country']) . ')';
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
+}
+
+/**
+ * Display cast & crew metabox (simplified)
+ */
+function movies_cast_crew_metabox_callback($post) {
+    $movie_data = get_post_meta($post->ID, 'movie_data', true);
+    
+    if (empty($movie_data)) {
+        echo '<p>' . __('No cast and crew data found.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    $movie_data = is_string($movie_data) ? json_decode($movie_data, true) : $movie_data;
+    $credits = isset($movie_data['credits']) ? $movie_data['credits'] : [];
+    
+    if (empty($credits)) {
+        echo '<p>' . __('No cast and crew information available.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    // Cast
+    if (!empty($credits['cast'])) {
+        echo '<h4>' . sprintf(__('Cast (%d)', 'movies-theme'), count($credits['cast'])) . '</h4>';
+        echo '<ul>';
+        foreach (array_slice($credits['cast'], 0, 10) as $cast_member) {
+            echo '<li><strong>' . esc_html($cast_member['name']) . '</strong>';
+            if (!empty($cast_member['character'])) {
+                echo ' as ' . esc_html($cast_member['character']);
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
+    
+    // Crew (key departments only)
+    if (!empty($credits['crew'])) {
+        $key_departments = ['Directing', 'Writing', 'Production'];
+        foreach ($key_departments as $dept) {
+            $dept_crew = array_filter($credits['crew'], function($member) use ($dept) {
+                return ($member['department'] ?? '') === $dept;
+            });
             
-            $existing_meta_query = $query->get('meta_query') ?: array();
-            $existing_meta_query[] = array(
-                'key' => 'release_date',
-                'value' => array($start_date, $end_date),
-                'compare' => 'BETWEEN',
-                'type' => 'DATE'
-            );
-            
-            $query->set('meta_query', $existing_meta_query);
+            if (!empty($dept_crew)) {
+                echo '<h4>' . esc_html($dept) . '</h4>';
+                echo '<ul>';
+                foreach (array_slice($dept_crew, 0, 5) as $crew_member) {
+                    echo '<li><strong>' . esc_html($crew_member['name']) . '</strong>';
+                    if (!empty($crew_member['job'])) {
+                        echo ' - ' . esc_html($crew_member['job']);
+                    }
+                    echo '</li>';
+                }
+                echo '</ul>';
+            }
         }
     }
 }
-add_action('pre_get_posts', 'movies_handle_admin_filters');
+
+/**
+ * Display videos metabox (simplified)
+ */
+function movies_videos_metabox_callback($post) {
+    $movie_data = get_post_meta($post->ID, 'movie_data', true);
+    
+    if (empty($movie_data)) {
+        echo '<p>' . __('No video data found.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    $movie_data = is_string($movie_data) ? json_decode($movie_data, true) : $movie_data;
+    $videos = isset($movie_data['videos']['results']) ? $movie_data['videos']['results'] : [];
+    
+    if (empty($videos)) {
+        echo '<p>' . __('No trailers or videos available.', 'movies-theme') . '</p>';
+        return;
+    }
+    
+    echo '<ul>';
+    foreach ($videos as $video) {
+        echo '<li>';
+        echo '<strong>' . esc_html($video['name']) . '</strong> ';
+        echo '<span>(' . esc_html($video['type']) . ' - ' . esc_html($video['site']) . ')</span>';
+            
+        if ($video['site'] === 'YouTube') {
+            $video_url = 'https://www.youtube.com/watch?v=' . $video['key'];
+            echo ' <a href="' . esc_url($video_url) . '" target="_blank">Watch</a>';
+        }
+        echo '</li>';
+    }
+    echo '</ul>';
+}
+
+/**
+ * Display TMDB info metabox (simplified)
+ */
+function movies_tmdb_info_metabox_callback($post) {
+    $tmdb_id = get_post_meta($post->ID, 'tmdb_id', true);
+    $movie_data = get_post_meta($post->ID, 'movie_data', true);
+    
+    if ($movie_data) {
+        $movie_data = is_string($movie_data) ? json_decode($movie_data, true) : $movie_data;
+    }
+    
+    echo '<table class="form-table">';
+    
+    if ($tmdb_id) {
+        echo '<tr>';
+        echo '<th scope="row">' . __('TMDB ID:', 'movies-theme') . '</th>';
+        echo '<td>' . esc_html($tmdb_id) . '<br>';
+        echo '<a href="https://www.themoviedb.org/movie/' . esc_attr($tmdb_id) . '" target="_blank">View on TMDB</a>';
+        echo '</td>';
+        echo '</tr>';
+    }
+    
+    if ($movie_data && !empty($movie_data['imdb_id'])) {
+        echo '<tr>';
+        echo '<th scope="row">' . __('IMDb ID:', 'movies-theme') . '</th>';
+        echo '<td>' . esc_html($movie_data['imdb_id']) . '<br>';
+        echo '<a href="https://www.imdb.com/title/' . esc_attr($movie_data['imdb_id']) . '/" target="_blank">View on IMDb</a>';
+        echo '</td>';
+        echo '</tr>';
+    }
+    
+    if ($movie_data && !empty($movie_data['homepage'])) {
+        echo '<tr>';
+        echo '<th scope="row">' . __('Official Website:', 'movies-theme') . '</th>';
+        echo '<td><a href="' . esc_url($movie_data['homepage']) . '" target="_blank">Visit Website</a></td>';
+        echo '</tr>';
+    }
+    
+    if ($movie_data && !empty($movie_data['status'])) {
+        echo '<tr>';
+        echo '<th scope="row">' . __('Status:', 'movies-theme') . '</th>';
+        echo '<td>' . esc_html($movie_data['status']) . '</td>';
+        echo '</tr>';
+    }
+    
+    if ($movie_data && !empty($movie_data['tagline'])) {
+        echo '<tr>';
+        echo '<th scope="row">' . __('Tagline:', 'movies-theme') . '</th>';
+        echo '<td><em>"' . esc_html($movie_data['tagline']) . '"</em></td>';
+        echo '</tr>';
+    }
+    
+    echo '</table>';
+    
+    if (empty($tmdb_id)) {
+        echo '<p style="color: #d63638; font-style: italic;">';
+        echo __('This movie has not been imported from TMDB. Use the TMDB Import tool to get complete movie data.', 'movies-theme');
+        echo '</p>';
+    }
+}
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+/**
+ * Find actor by TMDB ID
+ */
+function movies_find_actor_by_tmdb_id($tmdb_id) {
+    $posts = get_posts(array(
+        'post_type' => 'actor',
+        'meta_query' => array(
+            array(
+                'key' => 'tmdb_id',
+                'value' => $tmdb_id,
+                'compare' => '='
+            )
+        ),
+        'posts_per_page' => 1
+    ));
+            
+    return !empty($posts) ? $posts[0] : null;
+        }
+
+/**
+ * Find movie by TMDB ID
+ */
+function movies_find_movie_by_tmdb_id($tmdb_id) {
+    $posts = get_posts(array(
+        'post_type' => 'movie',
+        'meta_query' => array(
+            array(
+                'key' => 'tmdb_id',
+                'value' => $tmdb_id,
+                'compare' => '='
+            )
+        ),
+        'posts_per_page' => 1
+    ));
+    
+    return !empty($posts) ? $posts[0] : null;
+}
 
 /**
  * Get available years from movies
@@ -313,57 +556,3 @@ function movies_get_available_years() {
     
     return array_filter($years);
 }
-
-/**
- * Add admin notice showing movie counts
- */
-function movies_admin_notices() {
-    $screen = get_current_screen();
-    
-    if ($screen->id === 'edit-movie') {
-        $today = date('Y-m-d');
-        
-        // Count upcoming movies
-        $upcoming_count = get_posts(array(
-            'post_type' => 'movie',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'meta_query' => array(
-                array(
-                    'key' => 'release_date',
-                    'value' => $today,
-                    'compare' => '>',
-                    'type' => 'DATE'
-                )
-            )
-        ));
-        
-        // Count released movies
-        $released_count = get_posts(array(
-            'post_type' => 'movie',
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'meta_query' => array(
-                array(
-                    'key' => 'release_date',
-                    'value' => $today,
-                    'compare' => '<=',
-                    'type' => 'DATE'
-                )
-            )
-        ));
-        
-        if (!empty($upcoming_count) || !empty($released_count)) {
-            ?>
-            <div class="notice notice-info">
-                <p>
-                    <strong><?php _e('Movie Statistics:', 'movies-theme'); ?></strong>
-                    <?php printf(__('%d upcoming movies', 'movies-theme'), count($upcoming_count)); ?> | 
-                    <?php printf(__('%d released movies', 'movies-theme'), count($released_count)); ?>
-                </p>
-            </div>
-            <?php
-        }
-    }
-}
-add_action('admin_notices', 'movies_admin_notices'); 

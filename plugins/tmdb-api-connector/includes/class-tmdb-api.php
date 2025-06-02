@@ -135,7 +135,7 @@ class TMDB_API {
      */
     public function get_actor_details($actor_id) {
         return $this->make_request('/person/' . $actor_id, array(
-            'append_to_response' => 'images'
+            'append_to_response' => 'images,external_ids'
         ));
     }
     

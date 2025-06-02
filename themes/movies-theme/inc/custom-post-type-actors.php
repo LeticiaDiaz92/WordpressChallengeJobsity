@@ -485,6 +485,18 @@ function actors_details_metabox_callback($post) {
     $popularity = get_post_meta($post->ID, 'popularity', true);
     $homepage = get_post_meta($post->ID, 'homepage', true);
     $also_known_as = get_post_meta($post->ID, 'also_known_as', true);
+    $gender = get_post_meta($post->ID, 'gender', true);
+    $known_for_department = get_post_meta($post->ID, 'known_for_department', true);
+    $profile_path = get_post_meta($post->ID, 'profile_path', true);
+    $imdb_id = get_post_meta($post->ID, 'imdb_id', true);
+    
+    // Gender mapping
+    $gender_labels = array(
+        0 => __('Not specified', 'movies-theme'),
+        1 => __('Female', 'movies-theme'),
+        2 => __('Male', 'movies-theme'),
+        3 => __('Non-binary', 'movies-theme')
+    );
     
     ?>
     <style>
@@ -576,10 +588,40 @@ function actors_details_metabox_callback($post) {
             </div>
         <?php endif; ?>
         
+        <?php if ($gender !== '' && isset($gender_labels[$gender])) : ?>
+            <div class="actor-detail-row">
+                <span class="actor-detail-label"><?php _e('Gender:', 'movies-theme'); ?></span>
+                <div class="actor-detail-value"><?php echo esc_html($gender_labels[$gender]); ?></div>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($known_for_department) : ?>
+            <div class="actor-detail-row">
+                <span class="actor-detail-label"><?php _e('Known For:', 'movies-theme'); ?></span>
+                <div class="actor-detail-value">
+                    <span style="background: #f0f0f1; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
+                        <?php echo esc_html(strtoupper($known_for_department)); ?>
+                    </span>
+                </div>
+            </div>
+        <?php endif; ?>
+        
         <?php if ($popularity) : ?>
             <div class="actor-detail-row">
                 <span class="actor-detail-label"><?php _e('Popularity Score:', 'movies-theme'); ?></span>
                 <div class="actor-detail-value"><?php echo number_format((float)$popularity, 2); ?></div>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($imdb_id) : ?>
+            <div class="actor-detail-row">
+                <span class="actor-detail-label"><?php _e('IMDb ID:', 'movies-theme'); ?></span>
+                <div class="actor-detail-value">
+                    <?php echo esc_html($imdb_id); ?>
+                    <a href="https://www.imdb.com/name/<?php echo esc_attr($imdb_id); ?>/" target="_blank" class="tmdb-link" style="background: #f5c518; color: #000;">
+                        <?php _e('View on IMDb', 'movies-theme'); ?>
+                    </a>
+                </div>
             </div>
         <?php endif; ?>
         
@@ -588,6 +630,18 @@ function actors_details_metabox_callback($post) {
                 <span class="actor-detail-label"><?php _e('Homepage:', 'movies-theme'); ?></span>
                 <div class="actor-detail-value">
                     <a href="<?php echo esc_url($homepage); ?>" target="_blank"><?php echo esc_html($homepage); ?></a>
+                </div>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($profile_path) : ?>
+            <div class="actor-detail-row">
+                <span class="actor-detail-label"><?php _e('Profile Image Path:', 'movies-theme'); ?></span>
+                <div class="actor-detail-value">
+                    <small style="color: #666; font-family: monospace;"><?php echo esc_html($profile_path); ?></small>
+                    <br>
+                    <img src="https://image.tmdb.org/t/p/w92<?php echo esc_attr($profile_path); ?>" 
+                         alt="Profile preview" style="max-width: 50px; margin-top: 5px; border-radius: 3px;">
                 </div>
             </div>
         <?php endif; ?>

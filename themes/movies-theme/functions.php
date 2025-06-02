@@ -72,9 +72,9 @@ function movies_theme_scripts() {
         ));
     } else {
         wp_localize_script('movies-theme-bundle', 'movies_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('movies_nonce')
-        ));
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('movies_nonce')
+    ));
     }
     
     // Localize script for AJAX - Actors
@@ -105,7 +105,7 @@ require_once MOVIES_THEME_PATH . '/inc/helpers.php';
 
 
 // Include blocks
-require_once MOVIES_THEME_PATH . '/inc/blocks.php';
+require_once MOVIES_THEME_PATH . '/inc/blocks.php'; 
 
 /**
  * Get all years from movies release dates

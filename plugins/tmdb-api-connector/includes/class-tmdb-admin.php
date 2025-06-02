@@ -237,6 +237,10 @@ class TMDB_Admin {
                             <?php _e('Update Actor Credits', 'tmdb-api-connector'); ?>
                         </button>
                         
+                        <button type="button" class="button button-secondary manual-import" data-type="update_movie_details">
+                            <?php _e('Update Movie Details', 'tmdb-api-connector'); ?>
+                        </button>
+                        
                         <button type="button" class="button button-secondary manual-import" data-type="genres">
                             <?php _e('Import Genres', 'tmdb-api-connector'); ?>
                         </button>

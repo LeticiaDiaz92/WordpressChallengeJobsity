@@ -49,6 +49,9 @@ class TMDB_Importer {
             case 'update_actor_credits':
                 $results = $this->update_existing_actors_credits();
                 break;
+            case 'update_movie_details':
+                $results = $this->update_existing_movies();
+                break;
             case 'genres':
                 $results = $this->import_genres();
                 break;
@@ -434,6 +437,9 @@ class TMDB_Importer {
             'tagline' => $movie_data['tagline'],
             'homepage' => $movie_data['homepage'],
             'imdb_id' => $movie_data['imdb_id'],
+            'poster_path' => $movie_data['poster_path'] ?? '',
+            'backdrop_path' => $movie_data['backdrop_path'] ?? '',
+            'status' => $movie_data['status'] ?? '',
             'production_companies' => wp_json_encode($movie_data['production_companies']),
             'production_countries' => wp_json_encode($movie_data['production_countries']),
             'spoken_languages' => wp_json_encode($movie_data['spoken_languages']),
@@ -441,7 +447,8 @@ class TMDB_Importer {
             'credits' => wp_json_encode($movie_data['credits'] ?? array()),
             'videos' => wp_json_encode($movie_data['videos']['results'] ?? array()),
             'similar' => wp_json_encode($movie_data['similar']['results'] ?? array()),
-            'reviews' => wp_json_encode($movie_data['reviews']['results'] ?? array())
+            'reviews' => wp_json_encode($movie_data['reviews']['results'] ?? array()),
+            'movie_data' => wp_json_encode($movie_data)
         );
         
         foreach ($metadata as $key => $value) {
@@ -453,6 +460,12 @@ class TMDB_Importer {
      * Save actor metadata
      */
     private function save_actor_metadata($post_id, $actor_data) {
+        // Get IMDb ID from external_ids if available
+        $imdb_id = '';
+        if (!empty($actor_data['external_ids']['imdb_id'])) {
+            $imdb_id = $actor_data['external_ids']['imdb_id'];
+        }
+        
         $metadata = array(
             'tmdb_id' => $actor_data['id'],
             'birthday' => $actor_data['birthday'],
@@ -460,6 +473,10 @@ class TMDB_Importer {
             'place_of_birth' => $actor_data['place_of_birth'],
             'homepage' => $actor_data['homepage'],
             'popularity' => $actor_data['popularity'],
+            'gender' => $actor_data['gender'] ?? 0,
+            'known_for_department' => $actor_data['known_for_department'] ?? '',
+            'profile_path' => $actor_data['profile_path'] ?? '',
+            'imdb_id' => $imdb_id,
             'also_known_as' => wp_json_encode($actor_data['also_known_as'] ?? array()),
             'images' => wp_json_encode($actor_data['images']['profiles'] ?? array())
         );
@@ -476,7 +493,7 @@ class TMDB_Importer {
         } else {
             $metadata['movie_credits'] = wp_json_encode(array('cast' => array(), 'crew' => array()));
         }
-
+        
         foreach ($metadata as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
@@ -810,6 +827,179 @@ class TMDB_Importer {
             'success' => true,
             'message' => $message,
             'updated' => $updated,
+            'errors' => $errors
+        );
+    }
+
+    /**
+     * Update existing movies with complete details
+     */
+    public function update_existing_movies($limit = 20) {
+        $updated = 0;
+        $errors = array();
+        
+        TMDB_Logger::log("Starting update of existing movies (limit: {$limit})", 'info', 'update_movies');
+        
+        // Get existing movies that need updating
+        $movies = get_posts(array(
+            'post_type' => 'movie',
+            'posts_per_page' => $limit,
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'tmdb_id',
+                    'compare' => 'EXISTS'
+                )
+            )
+        ));
+        
+        foreach ($movies as $movie) {
+            $tmdb_id = get_post_meta($movie->ID, 'tmdb_id', true);
+            
+            if (empty($tmdb_id)) {
+                continue;
+            }
+            
+            // Get detailed movie information from TMDB
+            $details_response = $this->api->get_movie_details($tmdb_id);
+            
+            if (!$details_response['success']) {
+                $errors[] = "Failed to get details for movie ID {$tmdb_id}: " . $details_response['message'];
+                TMDB_Logger::log("Failed to get details for movie ID {$tmdb_id}", 'error', 'update_movies');
+                continue;
+            }
+            
+            $details = $details_response['data'];
+            
+            // Update post content with overview
+            $post_data = array(
+                'ID' => $movie->ID,
+                'post_content' => wp_kses_post($details['overview'])
+            );
+            
+            $result = wp_update_post($post_data);
+            
+            if (is_wp_error($result)) {
+                $errors[] = "Failed to update movie post ID {$movie->ID}: " . $result->get_error_message();
+                continue;
+            }
+            
+            // Save all movie metadata
+            $this->save_movie_metadata($movie->ID, $details);
+            
+            // Update poster if available
+            if (!empty($details['poster_path'])) {
+                $this->set_movie_poster($movie->ID, $details['poster_path'], $details['title']);
+            }
+            
+            // Update genres
+            if (!empty($details['genres'])) {
+                $this->set_movie_genres($movie->ID, $details['genres']);
+            }
+            
+            $updated++;
+            TMDB_Logger::log("✓ Updated movie: {$details['title']} (ID: {$movie->ID})", 'success', 'update_movies');
+        }
+        
+        $message = sprintf(__('Updated %d existing movies', 'tmdb-api-connector'), $updated);
+        
+        if (!empty($errors)) {
+            $message .= sprintf(__(' with %d errors', 'tmdb-api-connector'), count($errors));
+        }
+        
+        TMDB_Logger::log($message, 'success', 'update_movies', $updated);
+        
+        return array(
+            'success' => true,
+            'message' => $message,
+            'updated' => $updated,
+            'errors' => $errors
+        );
+    }
+
+    /**
+     * Update existing actors with new details
+     */
+    public function update_existing_actors_details($limit = 10) {
+        // Get actors that have TMDB ID but might be missing new fields
+        $actors = get_posts(array(
+            'post_type' => 'actor',
+            'posts_per_page' => $limit,
+            'meta_query' => array(
+                array(
+                    'key' => 'tmdb_id',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            )
+        ));
+        
+        if (empty($actors)) {
+            return array(
+                'success' => true,
+                'message' => __('No actors found to update', 'tmdb-api-connector'),
+                'processed' => 0
+            );
+        }
+        
+        $processed = 0;
+        $errors = array();
+        
+        foreach ($actors as $actor) {
+            $tmdb_id = get_post_meta($actor->ID, 'tmdb_id', true);
+            
+            if (empty($tmdb_id)) {
+                continue;
+            }
+            
+            // Get detailed actor information
+            $details_response = $this->api->get_actor_details($tmdb_id);
+            
+            if (!$details_response['success']) {
+                $errors[] = sprintf(__('Failed to get details for actor "%s": %s', 'tmdb-api-connector'), 
+                    $actor->post_title, $details_response['message']);
+                continue;
+            }
+            
+            $details = $details_response['data'];
+            
+            // Get movie credits
+            $credits_response = $this->api->get_actor_movie_credits($tmdb_id);
+            if ($credits_response['success']) {
+                $details['movie_credits'] = $credits_response['data'];
+            }
+            
+            // Update metadata
+            $this->save_actor_metadata($actor->ID, $details);
+            
+            // Update bio if not present
+            if (empty($actor->post_content) && !empty($details['biography'])) {
+                wp_update_post(array(
+                    'ID' => $actor->ID,
+                    'post_content' => wp_kses_post($details['biography'])
+                ));
+            }
+            
+            // Update featured image if not present
+            if (!has_post_thumbnail($actor->ID) && !empty($details['profile_path'])) {
+                $this->set_actor_photo($actor->ID, $details['profile_path'], $details['name']);
+            }
+            
+            $processed++;
+            
+            TMDB_Logger::log("Updated actor '{$actor->post_title}' with new details", 'info', 'actor_update');
+        }
+        
+        $message = sprintf(__('Updated %d actors', 'tmdb-api-connector'), $processed);
+        
+        if (!empty($errors)) {
+            $message .= '. ' . __('Errors:', 'tmdb-api-connector') . ' ' . implode(', ', $errors);
+        }
+        
+        return array(
+            'success' => true,
+            'message' => $message,
+            'processed' => $processed,
             'errors' => $errors
         );
     }
