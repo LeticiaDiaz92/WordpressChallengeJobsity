@@ -63,7 +63,6 @@
               }
               html += '<div class="search-result-content">'
               html += '<h4>' + item.title + '</h4>'
-              html += '<p>' + item.excerpt + '</p>'
               html += '<span class="search-result-type">' + item.type + '</span>'
               html += '</div>'
               html += '</a>'

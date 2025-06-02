@@ -14,14 +14,7 @@ get_header(); ?>
             
             <!-- Search Form -->
             <div class="hero-search">
-                <form role="search" method="get" class="search-form" action="<?php echo esc_url(home_url('/')); ?>">
-                    <div class="search-input-group">
-                        <input type="search" class="search-field" placeholder="<?php _e('Search movies, actors...', 'movies-theme'); ?>" value="<?php echo get_search_query(); ?>" name="s" />
-                        <button type="submit" class="search-submit">
-                            <span class="dashicons dashicons-search"></span>
-                        </button>
-                    </div>
-                </form>
+                <?php get_search_form(); ?>
             </div>
         </div>
     </div>

@@ -15,17 +15,28 @@ define('MOVIES_THEME_URL', get_template_directory_uri());
 
 // Theme setup
 function movies_theme_setup() {
-    // Add theme support
+    // Add theme support for various features
     add_theme_support('post-thumbnails');
     add_theme_support('title-tag');
+    add_theme_support('html5', array(
+        'search-form',
+        'comment-form',
+        'comment-list',
+        'gallery',
+        'caption'
+    ));
     add_theme_support('custom-logo');
-    add_theme_support('html5', array('search-form', 'comment-form', 'comment-list', 'gallery', 'caption'));
     
     // Register navigation menus
     register_nav_menus(array(
         'primary' => __('Primary Menu', 'movies-theme'),
-        'footer' => __('Footer Menu', 'movies-theme'),
+        'footer'  => __('Footer Menu', 'movies-theme'),
     ));
+    
+    // Add image sizes
+    add_image_size('movie-thumbnail', 300, 450, true);
+    add_image_size('actor-thumbnail', 200, 200, true);
+    add_image_size('hero-banner', 1920, 800, true);
 }
 add_action('after_setup_theme', 'movies_theme_setup');
 
@@ -475,4 +486,284 @@ add_action('updated_post_meta', function($meta_id, $object_id, $meta_key) {
     if ($meta_key === 'movie_credits') {
         wp_cache_delete('movies_with_actors_list');
     }
-}, 10, 3); 
+}, 10, 3);
+
+/**
+ * Include custom post types in search results
+ */
+function movies_include_custom_post_types_in_search($query) {
+    if (!is_admin() && $query->is_main_query() && $query->is_search()) {
+        $query->set('post_type', array('post', 'movie', 'actor'));
+        
+        // Increase search results per page
+        $query->set('posts_per_page', 12);
+    }
+}
+add_action('pre_get_posts', 'movies_include_custom_post_types_in_search');
+
+/**
+ * Track post views (with bot detection)
+ */
+function movies_track_post_views($post_id) {
+    // Don't track if user is admin or if it's a bot
+    if (is_admin() || movies_is_bot()) {
+        return;
+    }
+    
+    // Get current view count
+    $views = (int) get_post_meta($post_id, 'views', true);
+    
+    // Increment view count
+    update_post_meta($post_id, 'views', $views + 1);
+}
+
+/**
+ * Simple bot detection
+ */
+function movies_is_bot() {
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    
+    $bots = array(
+        'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
+        'yandexbot', 'facebookexternalhit', 'twitterbot', 'rogerbot',
+        'linkedinbot', 'embedly', 'quora link preview', 'showyoubot',
+        'outbrain', 'pinterest', 'developers.google.com', 'applebot',
+        'crawler', 'spider', 'scraper'
+    );
+    
+    $user_agent_lower = strtolower($user_agent);
+    
+    foreach ($bots as $bot) {
+        if (strpos($user_agent_lower, $bot) !== false) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Track views on single posts
+ */
+function movies_track_single_post_views() {
+    if (is_single() && (is_singular('movie') || is_singular('actor'))) {
+        movies_track_post_views(get_the_ID());
+    }
+}
+add_action('wp_head', 'movies_track_single_post_views');
+
+/**
+ * Improve search functionality to include custom fields
+ */
+function movies_extend_search_functionality($search, $wp_query) {
+    global $wpdb;
+    
+    if (!is_search() || is_admin()) {
+        return $search;
+    }
+    
+    $search_term = $wp_query->get('s');
+    if (empty($search_term)) {
+        return $search;
+    }
+    
+    // Escape the search term
+    $search_term_like = '%' . $wpdb->esc_like($search_term) . '%';
+    
+    // Create additional search conditions for meta fields
+    $meta_search = " OR EXISTS (
+        SELECT * FROM {$wpdb->postmeta} 
+        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
+        AND (
+            ({$wpdb->postmeta}.meta_key = 'overview' AND {$wpdb->postmeta}.meta_value LIKE %s)
+            OR ({$wpdb->postmeta}.meta_key = 'tagline' AND {$wpdb->postmeta}.meta_value LIKE %s)
+            OR ({$wpdb->postmeta}.meta_key = 'known_for_department' AND {$wpdb->postmeta}.meta_value LIKE %s)
+            OR ({$wpdb->postmeta}.meta_key = 'place_of_birth' AND {$wpdb->postmeta}.meta_value LIKE %s)
+        )
+    )";
+    
+    // Add the meta search to the existing search
+    if (!empty($search)) {
+        $search = preg_replace(
+            "/({$wpdb->posts}.post_title LIKE [^)]+\))/",
+            "($1 {$meta_search})",
+            $search
+        );
+        
+        // Prepare the query with multiple instances of the search term
+        $search = $wpdb->prepare($search, $search_term_like, $search_term_like, $search_term_like, $search_term_like);
+    }
+    
+    return $search;
+}
+add_filter('posts_search', 'movies_extend_search_functionality', 20, 2);
+
+/**
+ * Enhanced search results ordering using custom ranking formula (V × P) / D
+ */
+function movies_improve_search_ordering($orderby, $wp_query) {
+    global $wpdb;
+    
+    if (!is_search() || is_admin()) {
+        return $orderby;
+    }
+    
+    $search_term = $wp_query->get('s');
+    if (empty($search_term)) {
+        return $orderby;
+    }
+    
+    // Create custom ordering that uses the (V × P) / D formula with fallbacks
+    $custom_orderby = "
+        CASE 
+            WHEN {$wpdb->posts}.post_type = 'movie' THEN 
+                (
+                    COALESCE(
+                        (SELECT CAST(meta_value AS UNSIGNED) FROM {$wpdb->postmeta} WHERE post_id = {$wpdb->posts}.ID AND meta_key = 'views'), 
+                        1
+                    ) * 
+                    COALESCE(
+                        (SELECT CAST(meta_value AS DECIMAL(10,2)) FROM {$wpdb->postmeta} WHERE post_id = {$wpdb->posts}.ID AND meta_key = 'popularity'), 
+                        1.0
+                    )
+                ) / GREATEST(
+                    COALESCE(
+                        DATEDIFF(NOW(), (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = {$wpdb->posts}.ID AND meta_key = 'release_date')),
+                        DATEDIFF(NOW(), {$wpdb->posts}.post_date)
+                    ),
+                    1
+                )
+            WHEN {$wpdb->posts}.post_type = 'actor' THEN 
+                (
+                    COALESCE(
+                        (SELECT CAST(meta_value AS UNSIGNED) FROM {$wpdb->postmeta} WHERE post_id = {$wpdb->posts}.ID AND meta_key = 'views'), 
+                        1
+                    ) * 
+                    COALESCE(
+                        (SELECT CAST(meta_value AS DECIMAL(10,2)) FROM {$wpdb->postmeta} WHERE post_id = {$wpdb->posts}.ID AND meta_key = 'popularity'), 
+                        1.0
+                    )
+                ) / GREATEST(
+                    DATEDIFF(NOW(), {$wpdb->posts}.post_date),
+                    1
+                )
+            ELSE 1
+        END DESC,
+        CASE 
+            WHEN {$wpdb->posts}.post_title = '" . esc_sql($search_term) . "' THEN 1
+            WHEN {$wpdb->posts}.post_title LIKE '%" . esc_sql($search_term) . "%' THEN 2
+            ELSE 3
+        END ASC,
+        {$wpdb->posts}.post_type ASC,
+        {$wpdb->posts}.post_title ASC
+    ";
+    
+    return $custom_orderby;
+}
+add_filter('posts_orderby', 'movies_improve_search_ordering', 20, 2);
+
+/**
+ * Debug function to test search scoring
+ */
+function movies_debug_search_scores($search_term = '') {
+    if (!current_user_can('manage_options')) {
+        return 'Access denied';
+    }
+    
+    if (empty($search_term)) {
+        return 'Please provide a search term';
+    }
+    
+    $results = get_posts(array(
+        'post_type' => array('movie', 'actor'),
+        'posts_per_page' => 10,
+        's' => $search_term,
+        'suppress_filters' => false
+    ));
+    
+    $debug_output = array();
+    
+    foreach ($results as $post) {
+        $views = (int) get_post_meta($post->ID, 'views', true) ?: 1;
+        $popularity = (float) get_post_meta($post->ID, 'popularity', true) ?: 1.0;
+        
+        if ($post->post_type === 'movie') {
+            $release_date = get_post_meta($post->ID, 'release_date', true);
+            $days_since = $release_date ? (time() - strtotime($release_date)) / (24 * 60 * 60) : 1;
+        } else {
+            $days_since = (time() - strtotime($post->post_date)) / (24 * 60 * 60);
+        }
+        
+        $score = ($views * $popularity) / max($days_since, 1);
+        
+        $debug_output[] = array(
+            'title' => $post->post_title,
+            'type' => $post->post_type,
+            'views' => $views,
+            'popularity' => $popularity,
+            'days_since' => round($days_since, 2),
+            'score' => round($score, 4)
+        );
+    }
+    
+    // Sort by score descending
+    usort($debug_output, function($a, $b) {
+        return $b['score'] <=> $a['score'];
+    });
+    
+    return $debug_output;
+}
+
+/**
+ * Admin function to test search scoring (accessible via URL parameter for testing)
+ */
+function movies_test_search_scoring() {
+    if (isset($_GET['debug_search']) && current_user_can('manage_options')) {
+        $search_term = sanitize_text_field($_GET['debug_search']);
+        $results = movies_debug_search_scores($search_term);
+        
+        echo '<div style="background: white; padding: 20px; margin: 20px; border: 1px solid #ccc;">';
+        echo '<h3>Search Debug Results for: "' . esc_html($search_term) . '"</h3>';
+        echo '<table border="1" style="border-collapse: collapse; width: 100%;">';
+        echo '<tr><th>Title</th><th>Type</th><th>Views</th><th>Popularity</th><th>Days Since</th><th>Score</th></tr>';
+        
+        foreach ($results as $result) {
+            echo '<tr>';
+            echo '<td>' . esc_html($result['title']) . '</td>';
+            echo '<td>' . esc_html($result['type']) . '</td>';
+            echo '<td>' . esc_html($result['views']) . '</td>';
+            echo '<td>' . esc_html($result['popularity']) . '</td>';
+            echo '<td>' . esc_html($result['days_since']) . '</td>';
+            echo '<td><strong>' . esc_html($result['score']) . '</strong></td>';
+            echo '</tr>';
+        }
+        
+        echo '</table>';
+        echo '<p><small>Formula: (Views × Popularity) / Days Since Release/Publication</small></p>';
+        echo '</div>';
+    }
+}
+add_action('wp_head', 'movies_test_search_scoring');
+
+/**
+ * Add mobile menu toggle functionality
+ */
+function movies_mobile_menu_script() {
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+        
+        if (menuToggle && navMenu) {
+            menuToggle.addEventListener('click', function() {
+                navMenu.classList.toggle('toggled');
+                const expanded = navMenu.classList.contains('toggled');
+                menuToggle.setAttribute('aria-expanded', expanded);
+            });
+        }
+    });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'movies_mobile_menu_script'); 
