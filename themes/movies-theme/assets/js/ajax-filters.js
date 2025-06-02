@@ -55,11 +55,35 @@ jQuery(document).ready(function($) {
       })
 
       // Handle pagination clicks (delegated event)
-      $(document).on('click', '.pagination-wrapper a.page-numbers', function(e) {
+      $(document).on('click', '.pagination-wrapper a', function(e) {
         e.preventDefault()
-        const url = new URL(this.href)
-        const page = url.searchParams.get('paged') || 1
-        self.currentPage = parseInt(page)
+
+        let pageNum = 1
+        const href = $(this).attr('href')
+
+        if (href) {
+          const url = new URL(href, window.location.origin)
+          const extractedPage = url.searchParams.get('paged')
+          pageNum = parseInt(extractedPage) || 1
+        }
+
+        // Check if this is prev/next or numbered link
+        if ($(this).hasClass('prev')) {
+          pageNum = Math.max(1, self.currentPage - 1)
+        } else if ($(this).hasClass('next')) {
+          pageNum = self.currentPage + 1
+        } else {
+          // For numbered links, try to extract from text if URL parsing failed
+          if (pageNum === 1 && href) {
+            const linkText = $(this).text().trim()
+            const textPageNum = parseInt(linkText)
+            if (!isNaN(textPageNum) && textPageNum > 0) {
+              pageNum = textPageNum
+            }
+          }
+        }
+
+        self.currentPage = pageNum
         self.performSearch()
 
         // Scroll to top of results - with safety check
@@ -128,20 +152,13 @@ jQuery(document).ready(function($) {
     },
 
     updateResults: function(response) {
-      // Update movies grid
-      const $moviesContainer = $('#movies-grid').parent()
-      $moviesContainer.html(response.html)
+      // Update movies grid - reemplazar todo el contenido del contenedor de resultados
+      const $resultsContainer = $('#movies-results-container')
+      $resultsContainer.html(response.html)
 
-      // Update pagination
-      const $paginationContainer = $('.pagination-wrapper')
+      // Update pagination - si hay paginación, agregarla después del grid
       if (response.pagination) {
-        if ($paginationContainer.length) {
-          $paginationContainer.replaceWith(response.pagination)
-        } else {
-          $('.movies-archive-container').append(response.pagination)
-        }
-      } else {
-        $paginationContainer.remove()
+        $resultsContainer.append(response.pagination)
       }
 
       // Add fade-in animation

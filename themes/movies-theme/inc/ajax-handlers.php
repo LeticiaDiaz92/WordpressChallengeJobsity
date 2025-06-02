@@ -181,7 +181,7 @@ function movies_ajax_filter_movies() {
         ));
         
         if ($pagination) {
-            echo '<div class="pagination-wrapper pagination"><div class=" nav-links page-numbers-wrapper">';
+            echo '<div class="pagination-wrapper pagination"><div class="nav-links page-numbers-wrapper">';
             foreach ($pagination as $page) {
                 echo $page;
             }
@@ -211,10 +211,6 @@ function movies_ajax_filter_movies() {
     }
     
     wp_reset_postdata();
-    
-    // Debug: Log response before sending
-    error_log('AJAX actors filter: Sending response: ' . print_r($response, true));
-    
     wp_send_json($response);
 }
 add_action('wp_ajax_filter_movies', 'movies_ajax_filter_movies');
@@ -313,16 +309,10 @@ add_action('wp_ajax_nopriv_live_search', 'movies_handle_live_search');
  * AJAX handler for actor filters
  */
 function actors_ajax_filter_actors() {
-    // Debug: Log received data
-    error_log('AJAX actors filter called with data: ' . print_r($_POST, true));
-    
     // Verify nonce
     if (!wp_verify_nonce($_POST['nonce'], 'actors_nonce')) {
-        error_log('AJAX actors filter: Nonce verification failed');
         wp_die('Security check failed');
     }
-    
-    error_log('AJAX actors filter: Nonce verified successfully');
     
     // Get filter parameters
     $search = sanitize_text_field($_POST['actor_search'] ?? '');
@@ -509,10 +499,6 @@ function actors_ajax_filter_actors() {
     }
     
     wp_reset_postdata();
-    
-    // Debug: Log response before sending
-    error_log('AJAX actors filter: Sending response: ' . print_r($response, true));
-    
     wp_send_json($response);
 }
 
