@@ -23,6 +23,7 @@ function movies_theme_render_upcoming_movies_block($attributes) {
 
     if (!empty($grouped_movies)): ?>
         <div class="wp-block-movies-theme-upcoming-movies">
+            <h1 class="archive-title"><?php _e('Upcoming Movies', 'movies-theme'); ?></h1>
             <div class="archive-grid-by-month">
                 <?php foreach ($grouped_movies as $month_year => $movies): ?>
                     <div class="month-column">

@@ -15,12 +15,20 @@
 
 .filters-form {
   .filters-form-movie {
-    @include grid(4, $spacing-md);
+    @include grid(1, $spacing-md);
+    @include respond-to('md') {
+      @include grid(2, $spacing-md);
+    }
+    @include respond-to('lg') {
+      @include grid(4, $spacing-md);
+    }
   }
   
   .filters-form-actor {
     @include grid(3, $spacing-md);
   }
+
+
 
 
   .filter-group {

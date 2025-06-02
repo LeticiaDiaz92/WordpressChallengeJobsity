@@ -12,10 +12,13 @@
   z-index: $z-index-sticky;
   
   .container {
-    @include flex-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: $spacing-md;
+    @include grid(1, $spacing-md);
+    @include respond-to('md') {
+      @include grid(2, $spacing-md);
+    }
+    @include respond-to('lg') {
+      @include grid(3, $spacing-md);
+    }
   }
 }
 

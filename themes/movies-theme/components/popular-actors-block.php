@@ -22,6 +22,7 @@ function movies_theme_render_popular_actors_block($attributes) {
     
     if (!empty($popular_actors)): ?>
         <div class="wp-block-movies-theme-popular-actors">
+        <h1 class="archive-title"><?php _e('Popular Actors', 'movies-theme'); ?></h1>
             <div class="archive-grid" id= "actors-grid">
                 <?php foreach ($popular_actors as $actor): ?>
                     <div class="actor-card">

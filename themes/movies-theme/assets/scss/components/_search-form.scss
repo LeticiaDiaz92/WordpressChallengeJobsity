@@ -192,7 +192,6 @@
     }
 }
 
-// Hero Search (Homepage) Styles
 .hero-search {
     .search-form {
         max-width: 600px;
@@ -228,7 +227,7 @@
 @media (max-width: 768px) {
     .header-search {
         .search-form {
-            max-width: 250px;
+            max-width: 100%;
             
             .search-submit {
                 .search-button-text {
@@ -261,11 +260,6 @@
 }
 
 @media (max-width: 480px) {
-    .header-search {
-        .search-form {
-            max-width: 200px;
-        }
-    }
     
     .hero-search {
         .search-form {
