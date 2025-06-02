@@ -361,26 +361,6 @@ function movies_get_all_genres() {
 }
 
 /**
- * Get all available years from movies
- */
-function movies_get_all_years() {
-    global $wpdb;
-    
-    $years = $wpdb->get_col("
-        SELECT DISTINCT YEAR(STR_TO_DATE(meta_value, '%Y-%m-%d')) as year
-        FROM {$wpdb->postmeta} pm
-        JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-        WHERE pm.meta_key = 'release_date'
-        AND p.post_type = 'movie'
-        AND p.post_status = 'publish'
-        AND meta_value != ''
-        ORDER BY year DESC
-    ");
-    
-    return array_filter($years);
-}
-
-/**
  * Get upcoming movies filtered by criteria
  */
 function movies_get_filtered_upcoming($args = array()) {

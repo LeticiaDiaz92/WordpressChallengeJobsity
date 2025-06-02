@@ -15,10 +15,7 @@
 .filters-form {
   @include grid(1, $spacing-md);
   
-  @include respond-to('md') {
-    @include grid(4, $spacing-md);
-    align-items: end;
-  }
+ 
   
   .filter-group {
     label {

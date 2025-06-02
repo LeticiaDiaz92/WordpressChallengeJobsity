@@ -122,6 +122,17 @@ class TMDB_Admin {
                                         <label for="update_existing_movies"><?php _e('Update movie data if it already exists', 'tmdb-api-connector'); ?></label>
                                     </td>
                                 </tr>
+                                
+                                <tr>
+                                    <th scope="row">
+                                        <label for="update_existing_actors"><?php _e('Update Existing Actors', 'tmdb-api-connector'); ?></label>
+                                    </th>
+                                    <td>
+                                        <?php $update_existing_actors = get_option('tmdb_update_existing_actors', '1'); ?>
+                                        <input type="checkbox" id="update_existing_actors" name="update_existing_actors" value="1" <?php checked($update_existing_actors, '1'); ?> />
+                                        <label for="update_existing_actors"><?php _e('Update actor data and credits if actor already exists', 'tmdb-api-connector'); ?></label>
+                                    </td>
+                                </tr>
                             </table>
                         </div>
                         
@@ -220,6 +231,10 @@ class TMDB_Admin {
                         
                         <button type="button" class="button button-primary manual-import" data-type="popular_actors">
                             <?php _e('Import Popular Actors', 'tmdb-api-connector'); ?>
+                        </button>
+                        
+                        <button type="button" class="button button-secondary manual-import" data-type="update_actor_credits">
+                            <?php _e('Update Actor Credits', 'tmdb-api-connector'); ?>
                         </button>
                         
                         <button type="button" class="button button-secondary manual-import" data-type="genres">

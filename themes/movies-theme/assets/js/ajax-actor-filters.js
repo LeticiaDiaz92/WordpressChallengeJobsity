@@ -1,18 +1,20 @@
 /**
- * AJAX Filters for Movies
+ * AJAX Filters for Actors
  */
+
+/* global actorsAjax, jQuery */
 
 jQuery(document).ready(function($) {
   'use strict'
 
-  // Only initialize on archive pages
-  if (!$('.movies-filters').length) {
+  // Only initialize on actor archive pages
+  if (!$('.actors-filters').length) {
     return
   }
 
-  const MovieFilters = {
+  const ActorFilters = {
     $form: $('.filters-form'),
-    $resultsContainer: $('.movies-archive-container'),
+    $resultsContainer: $('.actors-archive-container'),
     $loadingOverlay: null,
     currentXHR: null,
     searchTimeout: null,
@@ -26,10 +28,10 @@ jQuery(document).ready(function($) {
 
     createLoadingOverlay: function() {
       this.$loadingOverlay = $(`
-        <div class="movies-loading-overlay">
+        <div class="actors-loading-overlay">
           <div class="loading-spinner">
             <div class="spinner"></div>
-            <p>Loading movies...</p>
+            <p>Loading actors...</p>
           </div>
         </div>
       `)
@@ -40,7 +42,7 @@ jQuery(document).ready(function($) {
       const self = this
 
       // Real-time search with debouncing
-      this.$form.find('input[name="movie_search"]').on('input', function() {
+      this.$form.find('input[name="actor_search"]').on('input', function() {
         clearTimeout(self.searchTimeout)
         self.searchTimeout = setTimeout(function() {
           self.currentPage = 1
@@ -72,6 +74,18 @@ jQuery(document).ready(function($) {
     performSearch: function() {
       const self = this
 
+      // Check if we should reload the page instead of performing AJAX
+      const searchValue = this.$form.find('input[name="actor_search"]').val().trim()
+      const movieValue = this.$form.find('select[name="actor_movie"]').val()
+      const orderValue = this.$form.find('select[name="orderby"]').val()
+
+      // If all filters are back to default values, reload the page to show original content
+      if (!searchValue && !movieValue && orderValue === 'title' && this.currentPage === 1) {
+        // Clear URL parameters and reload
+        window.location.href = window.location.pathname
+        return
+      }
+
       // Cancel previous request if still running
       if (this.currentXHR && this.currentXHR.readyState !== 4) {
         this.currentXHR.abort()
@@ -85,18 +99,17 @@ jQuery(document).ready(function($) {
 
       // Prepare data
       const formData = {
-        action: 'filter_movies',
-        nonce: movies_ajax.nonce,
-        movie_search: this.$form.find('input[name="movie_search"]').val(),
-        movie_year: this.$form.find('select[name="movie_year"]').val(),
-        movie_genre: this.$form.find('select[name="movie_genre"]').val(),
-        orderby: this.$form.find('select[name="orderby"]').val(),
+        action: 'filter_actors',
+        nonce: actorsAjax.nonce,
+        actor_search: searchValue,
+        actor_movie: movieValue,
+        orderby: orderValue,
         paged: this.currentPage
       }
 
       // Perform AJAX request
       this.currentXHR = $.ajax({
-        url: movies_ajax.ajax_url,
+        url: actorsAjax.ajaxUrl,
         type: 'POST',
         data: formData,
         timeout: 10000, // 10 second timeout
@@ -107,7 +120,7 @@ jQuery(document).ready(function($) {
             self.updateURL(formData)
             self.updateResultsCount(response.found_posts, formData)
           } else {
-            self.showError('Failed to load movies. Please try again.')
+            self.showError('Failed to load actors. Please try again.')
           }
         },
 
@@ -126,9 +139,9 @@ jQuery(document).ready(function($) {
     },
 
     updateResults: function(response) {
-      // Update movies grid
-      const $moviesContainer = $('.movies-grid').parent()
-      $moviesContainer.html(response.html)
+      // Update actors grid
+      const $actorsContainer = $('.actors-grid').parent()
+      $actorsContainer.html(response.html)
 
       // Update pagination
       const $paginationContainer = $('.pagination-wrapper')
@@ -136,31 +149,30 @@ jQuery(document).ready(function($) {
         if ($paginationContainer.length) {
           $paginationContainer.replaceWith(response.pagination)
         } else {
-          $('.movies-archive-container').append(response.pagination)
+          $('.actors-archive-container').append(response.pagination)
         }
       } else {
         $paginationContainer.remove()
       }
 
       // Add fade-in animation
-      $('.movies-grid').hide().fadeIn(400)
+      $('.actors-grid').hide().fadeIn(400)
     },
 
     updateResultsCount: function(count, filters) {
       const activeFilters = []
-      if (filters.movie_search) activeFilters.push('Title')
-      if (filters.movie_year) activeFilters.push('Year')
-      if (filters.movie_genre) activeFilters.push('Genre')
+      if (filters.actor_search) activeFilters.push('Name')
+      if (filters.actor_movie) activeFilters.push('Movie')
 
       let message
       if (activeFilters.length > 0) {
         message = count === 1
-          ? `Found ${count} movie matching filters: ${activeFilters.join(', ')}`
-          : `Found ${count} movies matching filters: ${activeFilters.join(', ')}`
+          ? `Found ${count} actor matching filters: ${activeFilters.join(', ')}`
+          : `Found ${count} actors matching filters: ${activeFilters.join(', ')}`
       } else {
         message = count === 1
-          ? `Showing ${count} movie`
-          : `Showing ${count} movies`
+          ? `Showing ${count} actor`
+          : `Showing ${count} actors`
       }
 
       $('.results-count').text(message)
@@ -171,16 +183,14 @@ jQuery(document).ready(function($) {
       const params = url.searchParams
 
       // Clear existing params
-      params.delete('movie_search')
-      params.delete('movie_year')
-      params.delete('movie_genre')
+      params.delete('actor_search')
+      params.delete('actor_movie')
       params.delete('orderby')
       params.delete('paged')
 
       // Add new params
-      if (data.movie_search) params.set('movie_search', data.movie_search)
-      if (data.movie_year) params.set('movie_year', data.movie_year)
-      if (data.movie_genre) params.set('movie_genre', data.movie_genre)
+      if (data.actor_search) params.set('actor_search', data.actor_search)
+      if (data.actor_movie) params.set('actor_movie', data.actor_movie)
       if (data.orderby && data.orderby !== 'title') params.set('orderby', data.orderby)
       if (data.paged > 1) params.set('paged', data.paged)
 
@@ -193,14 +203,11 @@ jQuery(document).ready(function($) {
       const params = url.searchParams
 
       // Set form values from URL
-      if (params.get('movie_search')) {
-        this.$form.find('input[name="movie_search"]').val(params.get('movie_search'))
+      if (params.get('actor_search')) {
+        this.$form.find('input[name="actor_search"]').val(params.get('actor_search'))
       }
-      if (params.get('movie_year')) {
-        this.$form.find('select[name="movie_year"]').val(params.get('movie_year'))
-      }
-      if (params.get('movie_genre')) {
-        this.$form.find('select[name="movie_genre"]').val(params.get('movie_genre'))
+      if (params.get('actor_movie')) {
+        this.$form.find('select[name="actor_movie"]').val(params.get('actor_movie'))
       }
       if (params.get('orderby')) {
         this.$form.find('select[name="orderby"]').val(params.get('orderby'))
@@ -209,21 +216,27 @@ jQuery(document).ready(function($) {
         this.currentPage = parseInt(params.get('paged'))
       }
 
-      // Only perform search if there are active filters
-      if (params.get('movie_search') || params.get('movie_year') ||
-          params.get('movie_genre') || params.get('orderby') || params.get('paged')) {
+      // Only perform search if there are active filters (not default values)
+      const hasActiveFilters = (
+        (params.get('actor_search') && params.get('actor_search').trim() !== '') ||
+        (params.get('actor_movie') && params.get('actor_movie') !== '') ||
+        (params.get('orderby') && params.get('orderby') !== 'title') ||
+        (params.get('paged') && parseInt(params.get('paged')) > 1)
+      )
+
+      if (hasActiveFilters) {
         this.performSearch()
       }
     },
 
     showLoading: function() {
       this.$loadingOverlay.addClass('visible')
-      $('.movies-grid').addClass('loading')
+      $('.actors-grid').addClass('loading')
     },
 
     hideLoading: function() {
       this.$loadingOverlay.removeClass('visible')
-      $('.movies-grid').removeClass('loading')
+      $('.actors-grid').removeClass('loading')
     },
 
     enableForm: function() {
@@ -232,13 +245,13 @@ jQuery(document).ready(function($) {
 
     showError: function(message) {
       const $error = $(`
-        <div class="movies-error-message">
+        <div class="actors-error-message">
           <p>${message}</p>
           <button class="retry-btn">Try Again</button>
         </div>
       `)
 
-      $('.movies-grid').parent().html($error)
+      $('.actors-grid').parent().html($error)
 
       // Bind retry button
       $error.find('.retry-btn').on('click', () => {
@@ -248,5 +261,5 @@ jQuery(document).ready(function($) {
   }
 
   // Initialize filters
-  MovieFilters.init()
+  ActorFilters.init()
 })

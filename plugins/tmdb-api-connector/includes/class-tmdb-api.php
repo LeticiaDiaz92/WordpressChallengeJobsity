@@ -135,8 +135,15 @@ class TMDB_API {
      */
     public function get_actor_details($actor_id) {
         return $this->make_request('/person/' . $actor_id, array(
-            'append_to_response' => 'movie_credits,images'
+            'append_to_response' => 'images'
         ));
+    }
+    
+    /**
+     * Get actor movie credits (dedicated endpoint for better data)
+     */
+    public function get_actor_movie_credits($actor_id) {
+        return $this->make_request('/person/' . $actor_id . '/movie_credits');
     }
     
     /**

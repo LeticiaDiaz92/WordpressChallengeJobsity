@@ -8,6 +8,12 @@
   @include flex-center;
   gap: $spacing-sm;
   margin: $spacing-xl 0;
+
+  .nav-links {
+    @include flex-center;
+    gap: $spacing-sm;
+    margin: $spacing-xl 0;
+  }
   
   .page-numbers {
     @include button-style($background-light, $text-color, $primary-color);

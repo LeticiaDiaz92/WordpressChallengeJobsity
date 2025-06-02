@@ -7,10 +7,12 @@
   "globals": {
     "wp": "readonly",
     "movies_ajax": "readonly",
+    "actorsAjax": "readonly",
     "MoviesTheme": "writable"
   },
   "rules": {
     "no-unused-vars": ["error", { "args": "none" }],
     "space-before-function-paren": ["error", "never"]
-  }
+  },
+  "ignorePatterns": ["**/*.min.js"]
 } 

@@ -269,6 +269,7 @@ class TMDB_API_Connector {
             'tmdb_import_limit' => intval($_POST['import_limit']),
             'tmdb_upcoming_months_ahead' => intval($_POST['upcoming_months_ahead']),
             'tmdb_update_existing_movies' => isset($_POST['update_existing_movies']) ? '1' : '0',
+            'tmdb_update_existing_actors' => isset($_POST['update_existing_actors']) ? '1' : '0',
             'tmdb_cache_duration' => intval($_POST['cache_duration']),
             'tmdb_enable_logging' => sanitize_text_field($_POST['enable_logging'])
         );
@@ -388,6 +389,7 @@ class TMDB_API_Connector {
             'tmdb_import_limit' => 20,
             'tmdb_upcoming_months_ahead' => 6,
             'tmdb_update_existing_movies' => '1',
+            'tmdb_update_existing_actors' => '1',
             'tmdb_cache_duration' => 3600,
             'tmdb_enable_logging' => '1'
         );

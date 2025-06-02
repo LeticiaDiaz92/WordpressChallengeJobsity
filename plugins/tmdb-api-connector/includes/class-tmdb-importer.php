@@ -46,6 +46,9 @@ class TMDB_Importer {
             case 'popular_actors':
                 $results = $this->import_popular_actors();
                 break;
+            case 'update_actor_credits':
+                $results = $this->update_existing_actors_credits();
+                break;
             case 'genres':
                 $results = $this->import_genres();
                 break;
@@ -372,6 +375,15 @@ class TMDB_Importer {
         
         $details = $details_response['data'];
         
+        // Get movie credits using dedicated endpoint for better data
+        $credits_response = $this->api->get_actor_movie_credits($actor_data['id']);
+        if ($credits_response['success']) {
+            $details['movie_credits'] = $credits_response['data'];
+        } else {
+            // Fallback to empty array if credits request fails
+            $details['movie_credits'] = array('cast' => array(), 'crew' => array());
+        }
+        
         // Create actor post
         $post_data = array(
             'post_title' => sanitize_text_field($details['name']),
@@ -449,10 +461,22 @@ class TMDB_Importer {
             'homepage' => $actor_data['homepage'],
             'popularity' => $actor_data['popularity'],
             'also_known_as' => wp_json_encode($actor_data['also_known_as'] ?? array()),
-            'movie_credits' => wp_json_encode($actor_data['movie_credits'] ?? array()),
             'images' => wp_json_encode($actor_data['images']['profiles'] ?? array())
         );
-        
+
+        // Handle movie credits with better structure
+        $movie_credits = $actor_data['movie_credits'] ?? array();
+        if (!empty($movie_credits)) {
+            // Log credits for debugging
+            $cast_count = count($movie_credits['cast'] ?? array());
+            $crew_count = count($movie_credits['crew'] ?? array());
+            TMDB_Logger::log("Actor {$actor_data['name']} has {$cast_count} cast credits and {$crew_count} crew credits", 'info', 'actor_import');
+            
+            $metadata['movie_credits'] = wp_json_encode($movie_credits);
+        } else {
+            $metadata['movie_credits'] = wp_json_encode(array('cast' => array(), 'crew' => array()));
+        }
+
         foreach ($metadata as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
@@ -717,6 +741,76 @@ class TMDB_Importer {
             'message' => $message,
             'post_id' => $post_id,
             'action' => $action
+        );
+    }
+
+    /**
+     * Update movie credits for existing actors
+     */
+    public function update_existing_actors_credits($limit = 10) {
+        $updated = 0;
+        $errors = array();
+        
+        TMDB_Logger::log('Starting update of existing actors movie credits', 'info', 'update_credits');
+        
+        // Get actors that don't have detailed movie credits yet
+        $actors = get_posts(array(
+            'post_type' => 'actor',
+            'posts_per_page' => $limit,
+            'meta_query' => array(
+                array(
+                    'key' => 'tmdb_id',
+                    'value' => '',
+                    'compare' => '!='
+                )
+            )
+        ));
+        
+        foreach ($actors as $actor) {
+            $tmdb_id = get_post_meta($actor->ID, 'tmdb_id', true);
+            
+            if (empty($tmdb_id)) {
+                continue;
+            }
+            
+            // Get current credits
+            $current_credits = get_post_meta($actor->ID, 'movie_credits', true);
+            
+            // Skip if already has detailed credits structure
+            if (!empty($current_credits)) {
+                $credits_data = json_decode($current_credits, true);
+                if (isset($credits_data['cast']) && isset($credits_data['crew'])) {
+                    continue; // Already has the new structure
+                }
+            }
+            
+            // Get updated movie credits using dedicated endpoint
+            $credits_response = $this->api->get_actor_movie_credits($tmdb_id);
+            
+            if ($credits_response['success']) {
+                $movie_credits = $credits_response['data'];
+                update_post_meta($actor->ID, 'movie_credits', wp_json_encode($movie_credits));
+                
+                $cast_count = count($movie_credits['cast'] ?? array());
+                $crew_count = count($movie_credits['crew'] ?? array());
+                
+                TMDB_Logger::log("Updated {$actor->post_title}: {$cast_count} cast, {$crew_count} crew credits", 'success', 'update_credits');
+                $updated++;
+            } else {
+                $error_msg = "Failed to update credits for {$actor->post_title}: " . $credits_response['message'];
+                TMDB_Logger::log($error_msg, 'error', 'update_credits');
+                $errors[] = $error_msg;
+            }
+        }
+        
+        $message = sprintf(__('Updated movie credits for %d actors', 'tmdb-api-connector'), $updated);
+        TMDB_Logger::log($message, 'success', 'update_credits', $updated);
+        
+        return array(
+            'success' => true,
+            'message' => $message,
+            'updated' => $updated,
+            'errors' => $errors
         );
     }
 } 

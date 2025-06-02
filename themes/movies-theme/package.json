@@ -11,9 +11,9 @@
     "watch": "npm run watch:css & npm run watch:js",
     "watch:css": "sass assets/scss/main.scss assets/css/main.css --watch --source-map",
     "watch:js": "chokidar 'assets/js/**/*.js' -c 'npm run minify:js' --initial",
-    "minify:js": "terser assets/js/main.js assets/js/ajax-filters.js assets/js/wishlist.js assets/js/search.js --compress --mangle --source-map --output assets/js/main.min.js",
+    "minify:js": "terser assets/js/main.js assets/js/ajax-filters.js assets/js/ajax-actor-filters.js assets/js/wishlist.js assets/js/search.js --compress --mangle --source-map --output assets/js/main.min.js",
     "lint:scss": "stylelint 'assets/scss/**/*.scss' --fix",
-    "lint:js": "eslint assets/js/*.js --fix",
+    "lint:js": "eslint assets/js/*.js --ignore-pattern '*.min.js' --fix",
     "clean": "rm -rf assets/css/main.css assets/css/main.css.map assets/js/main.min.js assets/js/main.min.js.map"
   },
   "keywords": [

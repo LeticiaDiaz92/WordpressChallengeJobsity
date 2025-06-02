@@ -46,6 +46,11 @@
     &.toggled {
       display: block;
     }
+
+    ul {
+      display: inline-block;
+      gap: 30px
+    }
     
     li {
       position: relative;

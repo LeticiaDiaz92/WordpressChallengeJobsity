@@ -62,6 +62,7 @@ jQuery(document).ready(function($) {
             import_limit: $('#import_limit').val(),
             upcoming_months_ahead: $('#upcoming_months_ahead').val(),
             update_existing_movies: $('#update_existing_movies').is(':checked') ? '1' : '0',
+            update_existing_actors: $('#update_existing_actors').is(':checked') ? '1' : '0',
             cache_duration: $('#cache_duration').val(),
             enable_logging: $('#enable_logging').is(':checked') ? '1' : '0',
             nonce: tmdb_ajax.nonce
