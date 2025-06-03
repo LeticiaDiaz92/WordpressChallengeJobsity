@@ -253,23 +253,6 @@ function movies_ajax_search() {
 add_action('wp_ajax_search_movies', 'movies_ajax_search');
 add_action('wp_ajax_nopriv_search_movies', 'movies_ajax_search');
 
-// Handle wishlist actions
-function movies_handle_add_to_wishlist() {
-    check_ajax_referer('movies_nonce', 'nonce');
-    
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Please log in to add movies to wishlist.'));
-    }
-    
-    $movie_id = intval($_POST['movie_id']);
-    $user_id = get_current_user_id();
-    
-    // Add to wishlist logic here
-    
-    wp_send_json_success(array('message' => 'Movie added to wishlist!'));
-}
-add_action('wp_ajax_add_to_wishlist', 'movies_handle_add_to_wishlist');
-
 // Handle live search
 function movies_handle_live_search() {
     check_ajax_referer('movies_nonce', 'nonce');
@@ -504,4 +487,82 @@ function actors_ajax_filter_actors() {
 
 // Register AJAX actions for actors
 add_action('wp_ajax_filter_actors', 'actors_ajax_filter_actors');
-add_action('wp_ajax_nopriv_filter_actors', 'actors_ajax_filter_actors'); 
+add_action('wp_ajax_nopriv_filter_actors', 'actors_ajax_filter_actors');
+
+/**
+ * Add movie to wishlist via AJAX
+ */
+function movies_ajax_add_to_wishlist() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'movies_nonce')) {
+        wp_die('Security check failed');
+    }
+    
+    // Check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array(
+            'message' => __('You must be logged in to add movies to your wishlist.', 'movies-theme')
+        ));
+    }
+    
+    $movie_id = intval($_POST['movie_id']);
+    
+    if (!$movie_id || get_post_type($movie_id) !== 'movie') {
+        wp_send_json_error(array(
+            'message' => __('Invalid movie.', 'movies-theme')
+        ));
+    }
+    
+    $added = movies_add_to_wishlist($movie_id);
+    
+    if ($added) {
+        wp_send_json_success(array(
+            'message' => __('Movie added to your wishlist!', 'movies-theme'),
+            'count' => movies_get_wishlist_count()
+        ));
+    } else {
+        wp_send_json_error(array(
+            'message' => __('Movie is already in your wishlist.', 'movies-theme')
+        ));
+    }
+}
+add_action('wp_ajax_add_to_wishlist', 'movies_ajax_add_to_wishlist');
+
+/**
+ * Remove movie from wishlist via AJAX
+ */
+function movies_ajax_remove_from_wishlist() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'movies_nonce')) {
+        wp_die('Security check failed');
+    }
+    
+    // Check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array(
+            'message' => __('You must be logged in to manage your wishlist.', 'movies-theme')
+        ));
+    }
+    
+    $movie_id = intval($_POST['movie_id']);
+    
+    if (!$movie_id) {
+        wp_send_json_error(array(
+            'message' => __('Invalid movie.', 'movies-theme')
+        ));
+    }
+    
+    $removed = movies_remove_from_wishlist($movie_id);
+    
+    if ($removed) {
+        wp_send_json_success(array(
+            'message' => __('Movie removed from your wishlist.', 'movies-theme'),
+            'count' => movies_get_wishlist_count()
+        ));
+    } else {
+        wp_send_json_error(array(
+            'message' => __('Movie was not in your wishlist.', 'movies-theme')
+        ));
+    }
+}
+add_action('wp_ajax_remove_from_wishlist', 'movies_ajax_remove_from_wishlist'); 

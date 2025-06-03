@@ -29,6 +29,7 @@
 @use 'components/single-movie'; 
 @use 'components/single-actor';
 @use 'components/banners';
+@use 'components/auth-modals';
 
 // Pages
 @use 'pages/search-results';

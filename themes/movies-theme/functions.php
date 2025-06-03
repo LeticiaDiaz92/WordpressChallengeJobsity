@@ -45,11 +45,19 @@ function movies_theme_scripts() {
     // Check if we're in development or production mode
     $is_development = defined('WP_DEBUG') && WP_DEBUG;
     
+    // Enqueue Font Awesome desde CDN
+    wp_enqueue_style(
+        'font-awesome', 
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css', 
+        array(), 
+        '6.5.1'
+    );
+    
     // Enqueue main stylesheet (compiled from Sass)
     wp_enqueue_style(
         'movies-theme-style', 
         MOVIES_THEME_URL . '/assets/css/main.css', 
-        array(), 
+        array('font-awesome'), // Dependencia de Font Awesome
         MOVIES_THEME_VERSION
     );
     
@@ -60,6 +68,8 @@ function movies_theme_scripts() {
         wp_enqueue_script('movies-theme-ajax-filters', MOVIES_THEME_URL . '/assets/js/ajax-filters.js', array('jquery'), MOVIES_THEME_VERSION, true);
         wp_enqueue_script('movies-theme-ajax-actor-filters', MOVIES_THEME_URL . '/assets/js/ajax-actor-filters.js', array('jquery'), MOVIES_THEME_VERSION, true);
         wp_enqueue_script('movies-theme-wishlist', MOVIES_THEME_URL . '/assets/js/wishlist.js', array('jquery'), MOVIES_THEME_VERSION, true);
+        wp_enqueue_script('movies-theme-wishlist-ajax', MOVIES_THEME_URL . '/assets/js/wishlist-ajax.js', array('jquery'), MOVIES_THEME_VERSION, true);
+        wp_enqueue_script('movies-theme-auth-modals', MOVIES_THEME_URL . '/assets/js/auth-modals.js', array('jquery'), MOVIES_THEME_VERSION, true);
         wp_enqueue_script('movies-theme-search', MOVIES_THEME_URL . '/assets/js/search.js', array('jquery'), MOVIES_THEME_VERSION, true);
     } else {
         // Production mode - load minified bundle
@@ -71,6 +81,8 @@ function movies_theme_scripts() {
             wp_enqueue_script('movies-theme-ajax-filters', MOVIES_THEME_URL . '/assets/js/ajax-filters.js', array('jquery'), MOVIES_THEME_VERSION, true);
             wp_enqueue_script('movies-theme-ajax-actor-filters', MOVIES_THEME_URL . '/assets/js/ajax-actor-filters.js', array('jquery'), MOVIES_THEME_VERSION, true);
             wp_enqueue_script('movies-theme-wishlist', MOVIES_THEME_URL . '/assets/js/wishlist.js', array('jquery'), MOVIES_THEME_VERSION, true);
+            wp_enqueue_script('movies-theme-wishlist-ajax', MOVIES_THEME_URL . '/assets/js/wishlist-ajax.js', array('jquery'), MOVIES_THEME_VERSION, true);
+            wp_enqueue_script('movies-theme-auth-modals', MOVIES_THEME_URL . '/assets/js/auth-modals.js', array('jquery'), MOVIES_THEME_VERSION, true);
             wp_enqueue_script('movies-theme-search', MOVIES_THEME_URL . '/assets/js/search.js', array('jquery'), MOVIES_THEME_VERSION, true);
         }
     }
@@ -81,11 +93,15 @@ function movies_theme_scripts() {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('movies_nonce')
         ));
+        wp_localize_script('movies-theme-wishlist-ajax', 'movies_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('movies_nonce')
+        ));
     } else {
         wp_localize_script('movies-theme-bundle', 'movies_ajax', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('movies_nonce')
-    ));
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('movies_nonce')
+        ));
     }
     
     // Localize script for AJAX - Actors

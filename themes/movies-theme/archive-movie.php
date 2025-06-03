@@ -172,6 +172,17 @@ get_header(); ?>
                                         <?php the_excerpt(); ?>
                                     </div>
                                 <?php endif; ?>
+                                
+                                <!-- Wishlist Button -->
+                                <div class="movie-actions">
+                                    <?php 
+                                    get_template_part('components/wishlist-button', null, array(
+                                        'movie_id' => get_the_ID(),
+                                        'size' => 'small',
+                                        'show_text' => true
+                                    )); 
+                                    ?>
+                                </div>
                             </div>
                         </article>
                     <?php endwhile; ?>

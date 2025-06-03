@@ -20,6 +20,10 @@
             </div>
         </div>
     </footer>
+
+<!-- Login/Register Modals -->
+<?php get_template_part('components/auth-modals'); ?>
+
 </div><!-- #page -->
 
 <?php wp_footer(); ?>

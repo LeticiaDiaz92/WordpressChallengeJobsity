@@ -11,6 +11,7 @@ jQuery(document).ready(function($) {
   // Initialize other components
   initScrollToTop()
   initMobileMenu()
+  initHeaderAccount()
 })
 
 /**
@@ -119,6 +120,47 @@ function initMobileMenu() {
       $('.mobile-menu-toggle').removeClass('active')
       $('.main-navigation').removeClass('mobile-open')
     }
+  })
+}
+
+/**
+ * Initialize header account functionality
+ */
+function initHeaderAccount() {
+  const $ = jQuery
+
+  // Login dropdown toggle
+  $('.login-toggle').on('click', function(e) {
+    e.stopPropagation()
+    $('.register-dropdown').removeClass('show')
+    $('.user-dropdown').removeClass('show')
+    $('.login-dropdown').toggleClass('show')
+  })
+
+  // Register dropdown toggle
+  $('.register-toggle').on('click', function(e) {
+    e.stopPropagation()
+    $('.login-dropdown').removeClass('show')
+    $('.user-dropdown').removeClass('show')
+    $('.register-dropdown').toggleClass('show')
+  })
+
+  // User menu dropdown toggle
+  $('.user-toggle').on('click', function(e) {
+    e.stopPropagation()
+    $('.login-dropdown').removeClass('show')
+    $('.register-dropdown').removeClass('show')
+    $('.user-dropdown').toggleClass('show')
+  })
+
+  // Close dropdowns when clicking outside
+  $(document).on('click', function() {
+    $('.login-dropdown, .register-dropdown, .user-dropdown').removeClass('show')
+  })
+
+  // Prevent dropdown close when clicking inside
+  $('.login-dropdown, .register-dropdown, .user-dropdown').on('click', function(e) {
+    e.stopPropagation()
   })
 }
 

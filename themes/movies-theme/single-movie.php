@@ -200,6 +200,15 @@ get_header(); ?>
                                     <i class="fas fa-play"></i>
                                     <?php _e('Watch Trailer', 'movies-theme'); ?>
                                 </button>
+                                
+                                <!-- Wishlist Button -->
+                                <?php 
+                                get_template_part('components/wishlist-button', null, array(
+                                    'movie_id' => get_the_ID(),
+                                    'size' => 'large',
+                                    'show_text' => true
+                                )); 
+                                ?>
                             </div>
                         <?php else: ?>
                             <div class="movie-actions">
@@ -207,6 +216,15 @@ get_header(); ?>
                                     <i class="fas fa-video-slash"></i>
                                     <?php _e('Trailer Not Available', 'movies-theme'); ?>
                                 </button>
+                                
+                                <!-- Wishlist Button -->
+                                <?php 
+                                get_template_part('components/wishlist-button', null, array(
+                                    'movie_id' => get_the_ID(),
+                                    'size' => 'large',
+                                    'show_text' => true
+                                )); 
+                                ?>
                             </div>
                         <?php endif; ?>
                     </div>
