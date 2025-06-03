@@ -2,14 +2,21 @@
 
 A modern WordPress theme and plugin system for movie and actor management, built with TMDB API integration, custom post types, and advanced search functionality.
 
-## 🎬 Live Demo
+### Requirements:
+- WordPress 5.0+
+- All-in-One WP Migration plugin
 
-**Live DEMO URL:** http://18.191.237.55/
+### Steps:
+1. Install fresh WordPress
+2. Install All-in-One WP Migration plugin
+3. Go to All-in-One WP Migration → Import
+4. Upload the .wpress file that is inside /import/ directory in the .zip file or if you prefer you can import the sql file that is inside /sql/
+5. Follow the import wizard
 
-**Wordpress Admin credentials:**
+### Login Credentials:
+- Username: admin
+- Password: admin
 
-- **user:** user 
-- **pwd:**  0j:yVk6Bycda
 
 ## ✨ Features Implemented
 
