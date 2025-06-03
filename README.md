@@ -69,23 +69,7 @@ define('DB_HOST', 'localhost');
 - For fresh data, use WordPress Admin → TMDB API → Import
 - Import popular movies and actors from TMDB
 
-## 🛠️ Development Setup
-
-### If you need to modify styles or scripts:
-
-```bash
-# Navigate to theme directory
-cd app/public/wp-content/themes/movies-theme
-
-# Install dependencies
-npm install
-
-# Build production assets (already included in repo)
-npm run build
-
-# Or watch for changes during development
-npm run dev
-```
+#
 
 **Note**: Pre-compiled CSS and JS files are included in the repository, so npm is not required for basic installation.
 
